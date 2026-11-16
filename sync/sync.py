@@ -170,11 +170,21 @@ ENTITY_ANY = re.compile(r"\b(LLC|L\.L\.C|Inc|Corp|Holdings|Ventures|Enterprises)
 
 def tidy(n):
     n = clean(n).strip(" ,-")
+    if "/" in n and "d/b/a" not in n.lower():
+        parts = [x.strip() for x in n.split("/") if x.strip()]
+        good = [x for x in parts if not ENTITY_ANY.search(x)]
+        if good and len(good) < len(parts):
+            n = good[0]
+    n = re.sub(r"\s*-\s*[RM]\s*$", "", n)                      # "Store - R" / "Store - M"
+    n = re.sub(r",?\s*\b(LLC|L\.L\.C\.?|Inc)\b\.?", "", n, flags=re.I)  # LLC anywhere
+    n = re.sub(r"\s{2,}", " ", n).strip(" ,-")
     n = re.sub(r"\s*(?:-\s*(?:REC|MED)|\((?:REC|MED|Rec|Med)\))\s*$", "", n).strip(" ,-")
     for _ in range(3):
         n = ENTITY.sub("", n).strip(" ,-")
     if n and (n.isupper() or n.islower()) and len(n) > 4:
         n = " ".join(w if (w.isupper() and len(w) <= 3) else w.capitalize() for w in n.split())
+    else:  # shouting words inside an otherwise normal name
+        n = " ".join(w.capitalize() if (w.isalpha() and w.isupper() and len(w) > 4) else w for w in n.split())
     return n
 
 
