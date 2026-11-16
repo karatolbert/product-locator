@@ -37,6 +37,7 @@ Links can also preselect filters, which is handy for Instagram bios and posts:
 | `name_overrides` | Rename a store, e.g. `"Spff Colo": "The Real Store Name"`. Use the name as it currently shows in the locator. |
 | `product_groups` | Combine several LeafLink products into one entry in the Product filter (e.g. Variety Pack #1, #2 and #3). |
 | `brand_logos` | Logo shown when someone picks a brand. Images live in `docs/img/brands/`. |
+| `strain_images` | Strain artwork per brand, shown when a strain is picked without a product. Images live in `docs/img/strains/`. |
 | `type_images` | Generic photo per product (used when a product is picked without a strain). Put the image in `docs/img/products/` and add a line here. |
 | `location_overrides` | Exact map pins for stores whose address can't be looked up, e.g. `"Outcrop Dispensary": [37.68, -106.35]`. |
 

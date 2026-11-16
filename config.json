@@ -76,5 +76,22 @@
     "Wisenheimer": "img/brands/wisenheimer.jpg",
     "Boost!": "img/brands/boost.jpg",
     "Oil": "img/brands/oil.jpg"
+  },
+  "strain_images": {
+    "_about": "Strain artwork shown when a strain is picked without a product. Grouped by brand; strain names match LeafLink.",
+    "Oil": {
+      "Grand Daddy Purps": "img/strains/oil/grand-daddy-purps.png",
+      "Banana Kush": "img/strains/oil/banana-kush.png",
+      "Blueberry Bubble": "img/strains/oil/blueberry-bubble.png",
+      "Fresh Squeeze": "img/strains/oil/fresh-squeeze.png",
+      "Green Skunk": "img/strains/oil/green-skunk.png",
+      "Mango Kush": "img/strains/oil/mango-kush.png",
+      "Maui Wowie": "img/strains/oil/maui-wowie.png",
+      "OG Kush": "img/strains/oil/og-kush.png",
+      "Purple Punch": "img/strains/oil/purple-punch.png",
+      "Sour Diesel": "img/strains/oil/sour-diesel.png",
+      "Super Lemon Haze": "img/strains/oil/super-lemon-haze.png",
+      "Tangerine Haze": "img/strains/oil/tangerine-haze.png"
+    }
   }
 }

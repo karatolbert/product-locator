@@ -512,6 +512,8 @@ def main():
         "lookback_days": int(cfg["lookback_days"]),
         "brands": out_brands,
         "brand_images": {b: (cfg.get("brand_logos") or {}).get(b) or brand_logo.get(b, "") for b in out_brands},
+        "strain_images": {b: {k: v for k, v in m.items() if not k.startswith("_")}
+                          for b, m in (cfg.get("strain_images") or {}).items() if not b.startswith("_") and isinstance(m, dict)},
         "type_images": {t: v for t, v in (cfg.get("type_images") or {}).items()
                         if not t.startswith("_") and any(p["type"] == t for p in out_products)},
         "products": out_products,

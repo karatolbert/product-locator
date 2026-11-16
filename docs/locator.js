@@ -426,6 +426,15 @@
       title = ps[0].variant;
       sub = t ? ps[0].type : "Available in " + ps.length + (ps.length === 1 ? " product" : " products");
       img = withImg ? withImg.image : "";
+      if (!t) {  // strain picked on its own: use the brand's strain artwork if there is one
+        var si = d.strain_images || {};
+        var brands = b ? [b] : ps.map(function (p) { return p.brand; });
+        for (var i = 0; i < brands.length; i++) {
+          var m = si[brands[i]] || {}, hit = null;
+          for (var k in m) if (norm(k) === v) hit = m[k];
+          if (hit) { img = hit; break; }
+        }
+      }
     } else if (t && ps.length) {
       title = ps[0].type;
       var n = ps.filter(isStrain).length;
