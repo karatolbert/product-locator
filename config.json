@@ -1,0 +1,9 @@
+{
+  "lookback_days": 90,
+  "order_statuses": ["Accepted", "Fulfilled", "Shipped", "Complete"],
+  "include_brands": [],
+  "exclude_customer_ids": [],
+  "exclude_customer_names": [],
+  "exclude_license_type_keywords": ["distributor", "distribution", "manufactur", "cultivat", "processor", "transport"],
+  "hide_products_containing": ["sample", "display", "tester", "promo"]
+}

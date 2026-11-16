@@ -1,0 +1,390 @@
+/*
+ * Product Locator widget
+ * Embed on any page (e.g. a Squarespace Code Block):
+ *
+ *   <div id="product-locator"></div>
+ *   <script src="https://YOUR-USER.github.io/product-locator/locator.js" defer></script>
+ *
+ * Optional attributes on the div:
+ *   data-src="https://.../stores.json"   data file (defaults to stores.json next to this script)
+ *   data-accent="#1a1a1a"                 button / highlight colour
+ *   data-brand="Sesh"                     preselect a brand
+ *   data-height="640"                     widget height in px (desktop)
+ * Page URL parameters ?brand=Sesh&product=<name> also preselect filters.
+ */
+(function () {
+  "use strict";
+
+  var script = document.currentScript;
+  var scriptBase = script ? script.src.replace(/[^\/]*$/, "") : "";
+  var LEAFLET_CSS = scriptBase + "vendor/leaflet/leaflet.css";
+  var LEAFLET_JS = scriptBase + "vendor/leaflet/leaflet.js";
+
+  // ------------------------------------------------------------ utilities
+  function loadCSS(href) {
+    if (document.querySelector('link[href="' + href + '"]')) return;
+    var l = document.createElement("link");
+    l.rel = "stylesheet"; l.href = href;
+    document.head.appendChild(l);
+  }
+  function loadJS(src) {
+    return new Promise(function (res, rej) {
+      if (window.L && window.L.map) return res();
+      var s = document.createElement("script");
+      s.src = src; s.onload = res; s.onerror = rej;
+      document.head.appendChild(s);
+    });
+  }
+  function el(tag, attrs, kids) {
+    var n = document.createElement(tag);
+    for (var k in attrs || {}) {
+      if (k === "text") n.textContent = attrs[k];
+      else if (k === "html") n.innerHTML = attrs[k];
+      else if (k.slice(0, 2) === "on") n.addEventListener(k.slice(2), attrs[k]);
+      else n.setAttribute(k, attrs[k]);
+    }
+    (kids || []).forEach(function (c) { if (c) n.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+    return n;
+  }
+  function miles(a, b) {
+    var R = 3958.8, r = Math.PI / 180;
+    var dLat = (b[0] - a[0]) * r, dLng = (b[1] - a[1]) * r;
+    var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(a[0] * r) * Math.cos(b[0] * r) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return 2 * R * Math.asin(Math.sqrt(h));
+  }
+  function fmtPhone(p) {
+    var d = (p || "").replace(/\D/g, "");
+    if (d.length === 11 && d[0] === "1") d = d.slice(1);
+    return d.length === 10 ? "(" + d.slice(0, 3) + ") " + d.slice(3, 6) + "-" + d.slice(6) : p;
+  }
+  function norm(s) { return (s || "").toLowerCase().trim(); }
+
+  function geocode(q) {
+    q = q.trim();
+    if (/^\d{5}$/.test(q)) {
+      return fetch("https://api.zippopotam.us/us/" + q).then(function (r) {
+        if (!r.ok) throw new Error("zip");
+        return r.json();
+      }).then(function (d) {
+        var p = d.places[0];
+        return { lat: +p.latitude, lng: +p.longitude, label: p["place name"] + ", " + p["state abbreviation"] };
+      });
+    }
+    var url = "https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=us&q=" + encodeURIComponent(q);
+    return fetch(url, { headers: { Accept: "application/json" } }).then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d.length) throw new Error("none");
+        return { lat: +d[0].lat, lng: +d[0].lon, label: d[0].display_name.split(",").slice(0, 2).join(",") };
+      });
+  }
+
+  // ------------------------------------------------------------ styles
+  var CSS = [
+    ".pl{--pl-accent:#1a1a1a;--pl-line:#e3e3e3;--pl-muted:#6b6b6b;--pl-bg:#fff;--pl-soft:#f6f6f4;",
+    "font-family:inherit;color:#1a1a1a;background:var(--pl-bg);border:1px solid var(--pl-line);border-radius:14px;overflow:hidden;line-height:1.4;font-size:15px;text-align:left}",
+    ".pl *{box-sizing:border-box}",
+    ".pl-bar{display:grid;grid-template-columns:minmax(200px,1.6fr) 1fr 1.3fr 110px;gap:10px;padding:14px;border-bottom:1px solid var(--pl-line);background:var(--pl-soft)}",
+    ".pl-search{display:flex;gap:6px}",
+    ".pl input,.pl select{width:100%;height:42px;border:1px solid var(--pl-line);border-radius:9px;padding:0 12px;font:inherit;font-size:15px;background:#fff;color:inherit;margin:0;-webkit-appearance:none;appearance:none}",
+    ".pl select{background-image:linear-gradient(45deg,transparent 50%,#888 50%),linear-gradient(135deg,#888 50%,transparent 50%);background-position:calc(100% - 17px) 18px,calc(100% - 12px) 18px;background-size:5px 5px;background-repeat:no-repeat;padding-right:30px;text-overflow:ellipsis}",
+    ".pl input:focus,.pl select:focus{outline:2px solid var(--pl-accent);outline-offset:-1px}",
+    ".pl-btn{height:42px;min-width:42px;border:0;border-radius:9px;background:var(--pl-accent);color:#fff;font:inherit;font-size:14px;font-weight:600;padding:0 14px;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:6px}",
+    ".pl-btn.pl-ghost{background:#fff;color:var(--pl-accent);border:1px solid var(--pl-line)}",
+    ".pl-btn svg{width:18px;height:18px}",
+    ".pl-body{display:grid;grid-template-columns:380px 1fr;height:var(--pl-h,620px)}",
+    ".pl-side{display:flex;flex-direction:column;border-right:1px solid var(--pl-line);min-height:0}",
+    ".pl-status{padding:10px 16px;font-size:13px;color:var(--pl-muted);border-bottom:1px solid var(--pl-line)}",
+    ".pl-status b{color:#1a1a1a}",
+    ".pl-list{overflow-y:auto;flex:1;min-height:0}",
+    ".pl-card{padding:14px 16px;border-bottom:1px solid var(--pl-line);cursor:pointer;transition:background .15s}",
+    ".pl-card:hover{background:var(--pl-soft)}",
+    ".pl-card.pl-on{background:var(--pl-soft);box-shadow:inset 3px 0 0 var(--pl-accent)}",
+    ".pl-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}",
+    ".pl-name{font-weight:700;font-size:16px;margin:0}",
+    ".pl-dist{font-size:13px;color:var(--pl-muted);white-space:nowrap}",
+    ".pl-addr{color:var(--pl-muted);font-size:14px;margin:3px 0 8px}",
+    ".pl-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px}",
+    ".pl-chip{font-size:12px;background:#fff;border:1px solid var(--pl-line);border-radius:999px;padding:2px 9px}",
+    ".pl-chip.pl-more{background:transparent;border-style:dashed;cursor:pointer}",
+    ".pl-links{display:flex;gap:14px;font-size:13px;font-weight:600}",
+    ".pl-links a{color:var(--pl-accent);text-decoration:underline;text-underline-offset:2px}",
+    ".pl-map{min-height:0;z-index:0}",
+    ".pl-empty{padding:30px 20px;text-align:center;color:var(--pl-muted)}",
+    ".pl-foot{padding:9px 16px;font-size:12px;color:var(--pl-muted);border-top:1px solid var(--pl-line);background:var(--pl-soft)}",
+    ".pl .leaflet-popup-content{font-family:inherit;font-size:14px;margin:12px 14px}",
+    ".pl-pop b{display:block;font-size:15px;margin-bottom:2px}",
+    "@media (max-width:860px){.pl-bar{grid-template-columns:1fr 104px}.pl-search{grid-column:1/-1}",
+    ".pl-bar .pl-prod{grid-column:1/-1;order:3}",
+    ".pl-body{grid-template-columns:1fr;grid-template-rows:300px auto;height:auto}",
+    ".pl-map{order:-1;height:300px}.pl-side{border-right:0}.pl-list{max-height:none}}"
+  ].join("");
+
+  var ICON_LOC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/></svg>';
+
+  // ------------------------------------------------------------ widget
+  function Locator(root) {
+    this.root = root;
+    this.src = root.getAttribute("data-src") || scriptBase + "stores.json";
+    this.origin = null;
+    this.markers = {};
+    this.activeId = null;
+    var params = new URLSearchParams(location.search);
+    this.initBrand = params.get("brand") || root.getAttribute("data-brand") || "";
+    this.initProduct = params.get("product") || "";
+    this.build();
+    this.load();
+  }
+
+  Locator.prototype.build = function () {
+    var self = this, r = this.root;
+    r.classList.add("pl");
+    if (r.getAttribute("data-accent")) r.style.setProperty("--pl-accent", r.getAttribute("data-accent"));
+    if (r.getAttribute("data-height")) r.style.setProperty("--pl-h", parseInt(r.getAttribute("data-height"), 10) + "px");
+    r.innerHTML = "";
+
+    this.q = el("input", { type: "search", placeholder: "ZIP code or city", "aria-label": "ZIP code or city",
+      onkeydown: function (e) { if (e.key === "Enter") { e.preventDefault(); self.search(); } } });
+    var go = el("button", { class: "pl-btn", type: "button", text: "Search", onclick: function () { self.search(); } });
+    var me = el("button", { class: "pl-btn pl-ghost", type: "button", title: "Use my location", "aria-label": "Use my location",
+      html: ICON_LOC, onclick: function () { self.locate(); } });
+    this.brandSel = el("select", { "aria-label": "Brand", onchange: function () { self.fillProducts(); self.render(true); } });
+    this.prodSel = el("select", { "aria-label": "Product", class: "pl-prod", onchange: function () { self.render(true); } });
+    this.radiusSel = el("select", { "aria-label": "Distance", onchange: function () { self.render(true); } });
+    [["10", "10 mi"], ["25", "25 mi"], ["50", "50 mi"], ["100", "100 mi"], ["0", "Any distance"]].forEach(function (o) {
+      self.radiusSel.appendChild(el("option", { value: o[0], text: o[1] }));
+    });
+    this.radiusSel.value = "25";
+
+    this.status = el("div", { class: "pl-status", "aria-live": "polite", text: "Loading stores…" });
+    this.list = el("div", { class: "pl-list" });
+    this.mapEl = el("div", { class: "pl-map" });
+    this.foot = el("div", { class: "pl-foot" });
+
+    r.appendChild(el("div", { class: "pl-bar" }, [
+      el("div", { class: "pl-search" }, [this.q, go, me]),
+      this.brandSel, this.prodSel, this.radiusSel
+    ]));
+    r.appendChild(el("div", { class: "pl-body" }, [
+      el("div", { class: "pl-side" }, [this.status, this.list]),
+      this.mapEl
+    ]));
+    r.appendChild(this.foot);
+  };
+
+  Locator.prototype.load = function () {
+    var self = this;
+    Promise.all([
+      fetch(this.src, { cache: "no-cache" }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }),
+      loadJS(LEAFLET_JS)
+    ]).then(function (res) {
+      self.data = res[0];
+      self.prodById = {};
+      self.data.products.forEach(function (p) { self.prodById[p.id] = p; });
+      self.initMap();
+      self.fillBrands();
+      self.render(true);
+      var d = new Date(self.data.updated);
+      self.foot.textContent = "Stores that ordered from us in the last " + self.data.lookback_days +
+        " days. Stock changes quickly, so please call ahead to confirm. Updated " +
+        d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) + ".";
+    }).catch(function (e) {
+      console.error("[locator]", e);
+      self.status.textContent = "Sorry, the store list couldn't load. Please try again later.";
+    });
+  };
+
+  Locator.prototype.initMap = function () {
+    var L = window.L;
+    this.map = L.map(this.mapEl, { scrollWheelZoom: false, zoomControl: true }).setView([39.5, -98.35], 4);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+      maxZoom: 19, subdomains: "abcd",
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+    }).addTo(this.map);
+    this.layer = L.layerGroup().addTo(this.map);
+    var self = this;
+    this.map.on("focus", function () { self.map.scrollWheelZoom.enable(); });
+    this.map.on("blur", function () { self.map.scrollWheelZoom.disable(); });
+  };
+
+  Locator.prototype.fillBrands = function () {
+    var s = this.brandSel, self = this;
+    s.innerHTML = "";
+    s.appendChild(el("option", { value: "", text: "All brands" }));
+    this.data.brands.forEach(function (b) { s.appendChild(el("option", { value: b, text: b })); });
+    var want = this.data.brands.filter(function (b) { return norm(b) === norm(self.initBrand); })[0];
+    if (want) s.value = want;
+    this.fillProducts();
+    if (this.initProduct) {
+      var p = this.data.products.filter(function (p) {
+        return String(p.id) === self.initProduct || norm(p.name) === norm(self.initProduct);
+      })[0];
+      if (p) { if (!s.value) { s.value = p.brand; this.fillProducts(); } this.prodSel.value = String(p.id); }
+    }
+  };
+
+  Locator.prototype.fillProducts = function () {
+    var b = this.brandSel.value, s = this.prodSel, prev = s.value;
+    s.innerHTML = "";
+    s.appendChild(el("option", { value: "", text: b ? "All " + b + " products" : "All products" }));
+    var groups = {};
+    this.data.products.forEach(function (p) {
+      if (b && p.brand !== b) return;
+      (groups[p.brand] = groups[p.brand] || []).push(p);
+    });
+    Object.keys(groups).sort().forEach(function (g) {
+      var parent = b ? s : s.appendChild(el("optgroup", { label: g }));
+      groups[g].forEach(function (p) { parent.appendChild(el("option", { value: String(p.id), text: p.name })); });
+    });
+    if (prev && s.querySelector('option[value="' + prev + '"]')) s.value = prev;
+  };
+
+  Locator.prototype.matches = function (store) {
+    var b = this.brandSel.value, pid = this.prodSel.value, self = this;
+    if (pid) return store.products.some(function (x) { return String(x) === pid; });
+    if (b) return store.products.some(function (x) { var p = self.prodById[x]; return p && p.brand === b; });
+    return true;
+  };
+
+  Locator.prototype.search = function () {
+    var self = this, q = this.q.value;
+    if (!q.trim()) { this.origin = null; this.render(true); return; }
+    this.status.textContent = "Finding " + q + "…";
+    geocode(q).then(function (o) { self.origin = o; self.render(true); })
+      .catch(function () { self.status.textContent = "We couldn't find “" + q + "”. Try a 5-digit ZIP code."; });
+  };
+
+  Locator.prototype.locate = function () {
+    var self = this;
+    if (!navigator.geolocation) { this.status.textContent = "Your browser can't share location. Try a ZIP code."; return; }
+    this.status.textContent = "Finding your location…";
+    navigator.geolocation.getCurrentPosition(function (p) {
+      self.origin = { lat: p.coords.latitude, lng: p.coords.longitude, label: "your location" };
+      self.q.value = "";
+      self.render(true);
+    }, function () { self.status.textContent = "Location wasn't shared. Enter a ZIP code instead."; },
+    { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 });
+  };
+
+  Locator.prototype.render = function (fit) {
+    var self = this, L = window.L, o = this.origin;
+    var radius = +this.radiusSel.value;
+    var rows = this.data.stores.filter(function (s) { return self.matches(s); }).map(function (s) {
+      return { s: s, d: o ? miles([o.lat, o.lng], [s.lat, s.lng]) : null };
+    });
+    var total = rows.length;
+    if (o && radius) rows = rows.filter(function (r) { return r.d <= radius; });
+    rows.sort(o ? function (a, b) { return a.d - b.d; }
+      : function (a, b) { return (a.s.state + a.s.city + a.s.name).localeCompare(b.s.state + b.s.city + b.s.name); });
+
+    // status line
+    var what = this.prodSel.value ? this.prodSel.options[this.prodSel.selectedIndex].text
+      : (this.brandSel.value || "our products");
+    this.status.innerHTML = "";
+    if (o) {
+      this.status.appendChild(el("span", {}, [el("b", { text: rows.length + (rows.length === 1 ? " store" : " stores") }),
+        " carrying " + what + (radius ? " within " + radius + " mi of " : " near ") + o.label]));
+    } else {
+      this.status.appendChild(el("span", {}, [el("b", { text: rows.length + (rows.length === 1 ? " store" : " stores") }),
+        " carrying " + what + ". Enter a ZIP to sort by distance."]));
+    }
+
+    // list
+    this.list.innerHTML = "";
+    this.markers = {};
+    this.layer.clearLayers();
+    if (!rows.length) {
+      var msg = o && radius && total ? "No stores within " + radius + " miles yet. Try a wider distance." :
+        "No stores match these filters yet.";
+      this.list.appendChild(el("div", { class: "pl-empty" }, [msg]));
+    }
+
+    var b = this.brandSel.value, pid = this.prodSel.value;
+    rows.forEach(function (r) {
+      var s = r.s;
+      var carried = s.products.map(function (x) { return self.prodById[x]; }).filter(function (p) {
+        return p && (pid ? String(p.id) === pid : !b || p.brand === b);
+      });
+      var chips = el("div", { class: "pl-chips" });
+      var showN = 5;
+      function drawChips(n) {
+        chips.innerHTML = "";
+        carried.slice(0, n).forEach(function (p) {
+          chips.appendChild(el("span", { class: "pl-chip", text: (b ? "" : p.brand + " · ") + p.name }));
+        });
+        if (carried.length > n) chips.appendChild(el("span", { class: "pl-chip pl-more", text: "+" + (carried.length - n) + " more",
+          onclick: function (e) { e.stopPropagation(); drawChips(carried.length); } }));
+      }
+      drawChips(showN);
+
+      var full = s.address + ", " + s.city + ", " + s.state + " " + s.zip;
+      var dir = "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(s.name + ", " + full);
+      var links = el("div", { class: "pl-links" }, [
+        el("a", { href: dir, target: "_blank", rel: "noopener", text: "Directions", onclick: function (e) { e.stopPropagation(); } }),
+        s.phone ? el("a", { href: "tel:" + s.phone.replace(/[^\d+]/g, ""), text: fmtPhone(s.phone), onclick: function (e) { e.stopPropagation(); } }) : null,
+        s.website ? el("a", { href: /^https?:/.test(s.website) ? s.website : "https://" + s.website, target: "_blank", rel: "noopener", text: "Website", onclick: function (e) { e.stopPropagation(); } }) : null
+      ]);
+      var card = el("div", { class: "pl-card", tabindex: "0", "data-id": s.id }, [
+        el("div", { class: "pl-top" }, [el("p", { class: "pl-name", text: s.name }),
+          r.d != null ? el("span", { class: "pl-dist", text: r.d.toFixed(r.d < 10 ? 1 : 0) + " mi" }) : null]),
+        el("div", { class: "pl-addr", text: full }),
+        carried.length ? chips : null,
+        links
+      ]);
+      card.addEventListener("click", function () { self.focus(s.id, true); });
+      card.addEventListener("keydown", function (e) { if (e.key === "Enter") self.focus(s.id, true); });
+      self.list.appendChild(card);
+
+      var m = L.circleMarker([s.lat, s.lng], {
+        radius: 7, weight: 2, color: "#fff", fillColor: getComputedStyle(self.root).getPropertyValue("--pl-accent").trim() || "#1a1a1a", fillOpacity: 1
+      }).bindPopup('<div class="pl-pop"><b></b><span></span></div>');
+      m.on("popupopen", function (e) {
+        var c = e.popup.getElement();
+        c.querySelector("b").textContent = s.name;
+        c.querySelector("span").textContent = s.address + ", " + s.city;
+      });
+      m.on("click", function () { self.focus(s.id, false); });
+      m.addTo(self.layer);
+      self.markers[s.id] = { m: m, card: card };
+    });
+
+    if (o) {
+      L.circleMarker([o.lat, o.lng], { radius: 6, weight: 3, color: "#2b7bff", fillColor: "#fff", fillOpacity: 1 }).addTo(this.layer);
+    }
+
+    if (fit) {
+      var pts = rows.slice(0, o ? 15 : rows.length).map(function (r) { return [r.s.lat, r.s.lng]; });
+      if (o) pts.push([o.lat, o.lng]);
+      if (pts.length === 1) this.map.setView(pts[0], 12);
+      else if (pts.length) this.map.fitBounds(pts, { padding: [30, 30], maxZoom: 13 });
+      else if (o) this.map.setView([o.lat, o.lng], 10);
+    }
+    setTimeout(function () { self.map.invalidateSize(); }, 50);
+  };
+
+  Locator.prototype.focus = function (id, fromList) {
+    var x = this.markers[id];
+    if (!x) return;
+    if (this.activeId && this.markers[this.activeId]) this.markers[this.activeId].card.classList.remove("pl-on");
+    this.activeId = id;
+    x.card.classList.add("pl-on");
+    if (fromList) {
+      this.map.setView(x.m.getLatLng(), Math.max(this.map.getZoom(), 13));
+      x.m.openPopup();
+    } else {
+      x.card.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  };
+
+  // ------------------------------------------------------------ boot
+  function boot() {
+    var style = document.createElement("style");
+    style.textContent = CSS;
+    document.head.appendChild(style);
+    loadCSS(LEAFLET_CSS);
+    var roots = document.querySelectorAll("#product-locator, [data-product-locator]");
+    Array.prototype.forEach.call(roots, function (r) { if (!r.__pl) r.__pl = new Locator(r); });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
+})();

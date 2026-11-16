@@ -1,0 +1,40 @@
+name: Refresh product locator
+
+on:
+  schedule:
+    - cron: "17 10 * * *"   # daily, ~5am Eastern
+  workflow_dispatch: {}      # "Run workflow" button for manual refreshes
+
+permissions:
+  contents: write
+
+concurrency:
+  group: locator-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Pull LeafLink data and build stores.json
+        env:
+          LEAFLINK_API_KEY: ${{ secrets.LEAFLINK_API_KEY }}
+        run: python3 sync/sync.py
+
+      - name: Commit if changed
+        run: |
+          git config user.name "locator-bot"
+          git config user.email "locator-bot@users.noreply.github.com"
+          git add docs/stores.json data/geocache.json
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Refresh locator data $(date -u +%F)"
+            git push
+          fi
