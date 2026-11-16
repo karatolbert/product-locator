@@ -28,5 +28,33 @@
   },
   "name_overrides": {
     "_example": "Current name shown in the locator (or LeafLink customer id): \"Name you want shown\""
+  },
+  "type_images": {
+    "_about": "Generic photo for each product (shown when a product is picked without a strain). Paths are inside docs/.",
+    "Oil Cartridge (1000mg)": "img/products/oil-cart.jpg",
+    "Oil Distillate Cartridge Hybrid Variety Pack (4000mg)": "img/products/oil-cart-4-pack.jpg",
+    "Oil Distillate Cartridge Indica Variety Pack (4000mg)": "img/products/oil-cart-4-pack.jpg",
+    "Oil Distillate Cartridge Sativa Variety Pack (4000mg)": "img/products/oil-cart-4-pack.jpg",
+    "Oil Infused Cone Variety Pack (5 pack .75g/ea)": "img/products/oil-cone-pack.jpg",
+    "Oil Tanker All In One (4g)": "img/products/oil-tanker.jpg",
+    "Oil Tugboat All In One (1g)": "img/products/oil-tugboat.jpg",
+    "Oil Tugboat All In One (2g)": "img/products/oil-tugboat.jpg",
+    "Oil Twists Distillate Cartridge (1000mg)": "img/products/oil-twists-cart.jpg",
+    "Oil Twists Distillate Cartridge Variety Pack #1 (4000mg)": "img/products/oil-twists-variety-pack.jpg",
+    "Oil Twists Distillate Cartridge Variety Pack #2 (4000mg)": "img/products/oil-twists-variety-pack.jpg",
+    "Oil Twists Distillate Cartridge Variety Pack #3 (4000mg)": "img/products/oil-twists-variety-pack.jpg",
+    "Oil Twists Tanker All In One (4g)": "img/products/oil-twists-tanker.jpg",
+    "Oil Twists Tugboat All In One (1g)": "img/products/oil-twists-tugboat-1g.jpg",
+    "Oil Twists Tugboat All In One (2g)": "img/products/oil-twists-tugboat-2g.jpg",
+    "Sesh Cartridge (1000mg)": "img/products/sesh-cart.jpg",
+    "Sesh Distillate Cartridge Variety Pack #1 (4000mg)": "img/products/sesh-cart-4-pack.jpg",
+    "Sesh Distillate Cartridge Variety Pack #2 (4000mg)": "img/products/sesh-cart-4-pack.jpg",
+    "Sesh Infused Cone (1 ea)": "img/products/sesh-cone.jpg",
+    "Sesh Infused Cone (2 ea)": "img/products/sesh-cone-2-pack.jpg",
+    "Sesh Infused Cone Variety Pack (5 pack .75g/ea)": "img/products/sesh-cone-5-pack.jpg",
+    "Sesh Syringe (1000mg)": "img/products/sesh-syringe.jpg",
+    "Seshie All in One (1 g)": "img/products/seshie-1g.jpg",
+    "Seshie All in One (2 g)": "img/products/seshie-2g.jpg",
+    "Super Seshie All in One (4g)": "img/products/super-seshie.jpg"
   }
 }

@@ -96,7 +96,7 @@
     ".pl-side{display:flex;flex-direction:column;border-right:1px solid var(--pl-line);min-height:0}",
     ".pl-feat{display:flex;gap:14px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--pl-line)}",
     ".pl-feat[hidden]{display:none}",
-    ".pl-feat img{width:72px;height:72px;object-fit:contain;border-radius:10px;background:var(--pl-soft);flex:none}",
+    ".pl-feat img{width:96px;height:96px;object-fit:contain;border-radius:10px;background:var(--pl-soft);flex:none}",
     ".pl-feat .pl-ft{font-weight:700;font-size:15px;line-height:1.25}",
     ".pl-feat .pl-fs{font-size:13px;color:var(--pl-muted);margin-top:2px}",
     ".pl-status{padding:10px 16px;font-size:13px;color:var(--pl-muted);border-bottom:1px solid var(--pl-line)}",
@@ -430,7 +430,8 @@
       title = ps[0].type;
       var n = ps.filter(isStrain).length;
       sub = n ? n + (n === 1 ? " strain" : " strains") : ps[0].brand;
-      img = withImg ? withImg.image : "";
+      var generic = (d.type_images || {})[ps[0].type];
+      img = generic ? (/^https?:/.test(generic) ? generic : scriptBase + generic) : withImg ? withImg.image : "";
     } else if (b) {
       title = b; sub = ps.length + " products";
     }
