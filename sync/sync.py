@@ -450,6 +450,14 @@ def main():
                 v["variant"] = v["type"]
             v["type"] = new
 
+    # --- drop words from product names (config: remove_words, e.g. "Distillate")
+    def strip_words(t):
+        for w in cfg.get("remove_words") or []:
+            t = re.sub(r"\s*\b" + re.escape(w) + r"\b", "", t, flags=re.I)
+        return re.sub(r"\s{2,}", " ", t).strip()
+    for v in out_by_key.values():
+        v["type"], v["name"] = strip_words(v["type"]), strip_words(v["name"])
+
     # --- product images (LeafLink /product-images/), cached per listing
     img_cache = load_json(IMG_CACHE_PATH, {})
     fetched = 0
@@ -514,8 +522,8 @@ def main():
         "brand_images": {b: (cfg.get("brand_logos") or {}).get(b) or brand_logo.get(b, "") for b in out_brands},
         "strain_images": {b: {k: v for k, v in m.items() if not k.startswith("_")}
                           for b, m in (cfg.get("strain_images") or {}).items() if not b.startswith("_") and isinstance(m, dict)},
-        "type_images": {t: v for t, v in (cfg.get("type_images") or {}).items()
-                        if not t.startswith("_") and any(p["type"] == t for p in out_products)},
+        "type_images": {strip_words(t): v for t, v in (cfg.get("type_images") or {}).items()
+                        if not t.startswith("_") and any(p["type"] == strip_words(t) for p in out_products)},
         "products": out_products,
         "stores": out_stores,
     }

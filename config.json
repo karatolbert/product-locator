@@ -91,7 +91,34 @@
       "Purple Punch": "img/strains/oil/purple-punch.png",
       "Sour Diesel": "img/strains/oil/sour-diesel.png",
       "Super Lemon Haze": "img/strains/oil/super-lemon-haze.png",
-      "Tangerine Haze": "img/strains/oil/tangerine-haze.png"
+      "Tangerine Haze": "img/strains/oil/tangerine-haze.png",
+      "Apple Sauce": "img/strains/oil-twists/apple-sauce.png",
+      "Baked Banana": "img/strains/oil-twists/baked-banana.png",
+      "Blueberry Swirl": "img/strains/oil-twists/blueberry-swirl.png",
+      "Cherry Slush": "img/strains/oil-twists/cherry-slush.png",
+      "Citrus Splash": "img/strains/oil-twists/citrus-splash.png",
+      "Mango Squeeze": "img/strains/oil-twists/mango-squeeze.png",
+      "Maple Drip": "img/strains/oil-twists/maple-drip.png",
+      "Orange Krush": "img/strains/oil-twists/orange-krush.png",
+      "Punchberry": "img/strains/oil-twists/punchberry.png",
+      "Strawberry Shortcake": "img/strains/oil-twists/strawberry-shortcake.png",
+      "Tropsicle": "img/strains/oil-twists/tropsicle.png",
+      "Watermelon Ice": "img/strains/oil-twists/watermelon-ice.png"
+    },
+    "Sesh": {
+      "Apple Fizz OG": "img/strains/sesh/apple-fizz-og.png",
+      "Cherry Limeade": "img/strains/sesh/cherry-limeade.png",
+      "Churroz": "img/strains/sesh/churroz.png",
+      "Electric Lemonade": "img/strains/sesh/electric-lemonade.png",
+      "Grand Daddy Grape": "img/strains/sesh/grand-daddy-grape.png",
+      "Orange Creamsicle": "img/strains/sesh/orange-creamsicle.png",
+      "Pineapple Cake Express": "img/strains/sesh/pineapple-cake-express.png",
+      "Root Beer Kush": "img/strains/sesh/root-beer-kush.png",
+      "Watermelon Bubblegum": "img/strains/sesh/watermelon-bubblegum.png",
+      "White Runtz": "img/strains/sesh/white-runtz.png"
     }
-  }
+  },
+  "remove_words": [
+    "Distillate"
+  ]
 }
