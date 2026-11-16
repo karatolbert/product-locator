@@ -433,6 +433,23 @@ def main():
             ptype, _, variant = p["name"].partition(" - ")
             out_by_key[key] = {"id": key, "brand": p["brand"], "type": ptype.strip(),
                                "variant": variant.strip(), "name": p["name"]}
+    # --- combine product types into one product (config: product_groups)
+    group_of = {}
+    for new, olds in (cfg.get("product_groups") or {}).items():
+        if new.startswith("_"):
+            continue
+        for old in olds:
+            group_of[old.lower()] = new
+    for v in out_by_key.values():
+        new = group_of.get(v["type"].lower())
+        if new:
+            m = re.search(r"#\s*\d+", v["type"])
+            if m and v["variant"].lower() in ("", "twists 4pk", "variety pack"):
+                v["variant"] = "Pack " + m.group(0).replace(" ", "")
+            elif not v["variant"]:
+                v["variant"] = v["type"]
+            v["type"] = new
+
     # --- product images (LeafLink /product-images/), cached per listing
     img_cache = load_json(IMG_CACHE_PATH, {})
     fetched = 0

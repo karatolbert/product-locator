@@ -261,7 +261,7 @@
   // Strain list: every strain, narrowed by brand / product when those are chosen.
   // Non-strain variants (battery colours, variety packs) are left out.
   function isStrain(p) {
-    return p.variant && !/battery/i.test(p.type) && !/variety|sampler/i.test(p.variant);
+    return p.variant && !/battery|variety|sampler/i.test(p.type + " " + p.variant);
   }
   Locator.prototype.fillVariants = function (keep) {
     var s = this.varSel, b = this.brandSel.value, t = this.prodSel.value, prev = s.value, seen = {}, list = [];
