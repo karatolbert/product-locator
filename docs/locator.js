@@ -150,7 +150,7 @@
       html: ICON_LOC, onclick: function () { self.locate(); } });
     this.brandSel = el("select", { "aria-label": "Brand", onchange: function () { self.fillTypes(); self.fillVariants(); self.render(true); } });
     this.prodSel = el("select", { "aria-label": "Product", class: "pl-prod", onchange: function () { self.fillVariants(); self.render(true); } });
-    this.varSel = el("select", { "aria-label": "Flavor", class: "pl-var", onchange: function () { self.render(true); } });
+    this.varSel = el("select", { "aria-label": "Strain", class: "pl-var", onchange: function () { self.render(true); } });
     this.radiusSel = el("select", { "aria-label": "Distance", onchange: function () { self.render(true); } });
     [["10", "10 mi"], ["25", "25 mi"], ["50", "50 mi"], ["100", "100 mi"], ["0", "Any distance"]].forEach(function (o) {
       self.radiusSel.appendChild(el("option", { value: o[0], text: o[1] }));
@@ -250,12 +250,12 @@
     if (prev && seen[prev]) s.value = prev;
   };
 
-  // Flavor = the specific product within a type
+  // Strain = the specific product within a type
   Locator.prototype.fillVariants = function (keep) {
     var s = this.varSel, t = this.prodSel.value, prev = s.value;
     s.innerHTML = "";
     var vs = !t ? [] : this.data.products.filter(function (p) { return p.brand + "||" + p.type === t && p.variant; });
-    s.appendChild(el("option", { value: "", text: !t ? "Flavor" : vs.length ? "All flavors" : "—" }));
+    s.appendChild(el("option", { value: "", text: !t ? "Strain" : vs.length ? "All strains" : "—" }));
     vs.forEach(function (p) { s.appendChild(el("option", { value: p.id, text: p.variant })); });
     s.disabled = !vs.length;
     if (keep && prev && vs.some(function (p) { return p.id === prev; })) s.value = prev;

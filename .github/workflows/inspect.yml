@@ -1,0 +1,22 @@
+name: Inspect product image fields (temporary)
+on: workflow_dispatch
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          KEY: ${{ secrets.LEAFLINK_API_KEY }}
+        run: |
+          python3 - <<'PY'
+          import json, os, urllib.request
+          def get(u): return json.load(urllib.request.urlopen(urllib.request.Request(u, headers={"Authorization": "App " + os.environ["KEY"]})))
+          r = get("https://app.leaflink.com/api/v2/products/?limit=40")
+          p = r["results"]
+          print("KEYS:", sorted(p[0].keys()))
+          for x in p[:40]:
+              imgs = {k: v for k, v in x.items() if "image" in k.lower() or "photo" in k.lower() or "media" in k.lower()}
+              print("PROD:", x.get("name"), "|", json.dumps(imgs)[:300])
+          for path in ("product-images/?limit=3", "brands/?limit=5"):
+              try: print(path, json.dumps(get("https://app.leaflink.com/api/v2/" + path))[:900])
+              except Exception as e: print(path, "ERR", e)
+          PY
