@@ -10,7 +10,7 @@
  *   data-accent="#1a1a1a"                 button / highlight colour
  *   data-brand="Sesh"                     preselect a brand
  *   data-height="640"                     widget height in px (desktop)
- * Page URL parameters ?brand=Sesh&product=<name> also preselect filters.
+ * Page URL parameters ?brand=Sesh, ?product=<name> and ?strain=Blue%20Dream preselect filters.
  */
 (function () {
   "use strict";
@@ -137,6 +137,7 @@
     var params = new URLSearchParams(location.search);
     this.initBrand = params.get("brand") || root.getAttribute("data-brand") || "";
     this.initProduct = params.get("product") || "";
+    this.initStrain = params.get("strain") || root.getAttribute("data-strain") || "";
     this.build();
     this.load();
   }
@@ -153,8 +154,8 @@
     var go = el("button", { class: "pl-btn", type: "button", text: "Search", onclick: function () { self.search(); } });
     var me = el("button", { class: "pl-btn pl-ghost", type: "button", title: "Use my location", "aria-label": "Use my location",
       html: ICON_LOC, onclick: function () { self.locate(); } });
-    this.brandSel = el("select", { "aria-label": "Brand", onchange: function () { self.fillTypes(); self.fillVariants(); self.render(true); } });
-    this.prodSel = el("select", { "aria-label": "Product", class: "pl-prod", onchange: function () { self.fillVariants(); self.render(true); } });
+    this.brandSel = el("select", { "aria-label": "Brand", onchange: function () { self.fillTypes(); self.fillVariants(true); self.render(true); } });
+    this.prodSel = el("select", { "aria-label": "Product", class: "pl-prod", onchange: function () { self.fillVariants(true); self.render(true); } });
     this.varSel = el("select", { "aria-label": "Strain", class: "pl-var", onchange: function () { self.render(true); } });
     this.radiusSel = el("select", { "aria-label": "Distance", onchange: function () { self.render(true); } });
     [["10", "10 mi"], ["25", "25 mi"], ["50", "50 mi"], ["100", "100 mi"], ["0", "Any distance"]].forEach(function (o) {
@@ -231,9 +232,10 @@
         s.value = hit.brand; this.fillTypes();
         this.prodSel.value = hit.brand + "||" + hit.type;
         this.fillVariants();
-        if (p && p.variant) this.varSel.value = p.id;
+        if (p && p.variant) this.varSel.value = norm(p.variant);
       }
     }
+    if (this.initStrain) { this.fillVariants(); this.varSel.value = norm(this.initStrain); }
     this.fillVariants(true);
   };
 
@@ -256,15 +258,25 @@
     if (prev && seen[prev]) s.value = prev;
   };
 
-  // Strain = the specific product within a type
+  // Strain list: every strain, narrowed by brand / product when those are chosen.
+  // Non-strain variants (battery colours, variety packs) are left out.
+  function isStrain(p) {
+    return p.variant && !/battery/i.test(p.type) && !/variety|sampler/i.test(p.variant);
+  }
   Locator.prototype.fillVariants = function (keep) {
-    var s = this.varSel, t = this.prodSel.value, prev = s.value;
+    var s = this.varSel, b = this.brandSel.value, t = this.prodSel.value, prev = s.value, seen = {}, list = [];
+    this.data.products.forEach(function (p) {
+      if (!isStrain(p)) return;
+      if (t ? p.brand + "||" + p.type !== t : b && p.brand !== b) return;
+      var k = norm(p.variant);
+      if (!seen[k]) { seen[k] = 1; list.push(p.variant); }
+    });
+    list.sort(function (a, c) { return a.localeCompare(c); });
     s.innerHTML = "";
-    var vs = !t ? [] : this.data.products.filter(function (p) { return p.brand + "||" + p.type === t && p.variant; });
-    s.appendChild(el("option", { value: "", text: !t ? "Strain" : vs.length ? "All strains" : "—" }));
-    vs.forEach(function (p) { s.appendChild(el("option", { value: p.id, text: p.variant })); });
-    s.disabled = !vs.length;
-    if (keep && prev && vs.some(function (p) { return p.id === prev; })) s.value = prev;
+    s.appendChild(el("option", { value: "", text: list.length ? "All strains" : "—" }));
+    list.forEach(function (v) { s.appendChild(el("option", { value: norm(v), text: v })); });
+    s.disabled = !list.length;
+    if (keep && prev && seen[prev]) s.value = prev;
   };
 
   Locator.prototype.wanted = function () {
@@ -272,7 +284,9 @@
     if (!b && !t && !v) return null;
     var ok = {};
     this.data.products.forEach(function (p) {
-      if (v ? p.id === v : t ? p.brand + "||" + p.type === t : p.brand === b) ok[p.id] = 1;
+      if (t ? p.brand + "||" + p.type !== t : b && p.brand !== b) return;
+      if (v && norm(p.variant) !== v) return;
+      ok[p.id] = 1;
     });
     return ok;
   };
@@ -316,9 +330,10 @@
     this.renderFeature();
 
     // status line
-    var what = this.varSel.value ? (this.prodSel.options[this.prodSel.selectedIndex].text + " – " + this.varSel.options[this.varSel.selectedIndex].text)
-      : this.prodSel.value ? this.prodSel.options[this.prodSel.selectedIndex].text
-      : (this.brandSel.value || "our products");
+    var vt = this.varSel.value ? this.varSel.options[this.varSel.selectedIndex].text : "";
+    var pt = this.prodSel.value ? this.prodSel.options[this.prodSel.selectedIndex].text : "";
+    var what = pt && vt ? pt + " – " + vt : pt || (vt ? (this.brandSel.value ? this.brandSel.value + " " : "") + vt
+      : (this.brandSel.value || "our products"));
     this.status.innerHTML = "";
     if (o) {
       this.status.appendChild(el("span", {}, [el("b", { text: rows.length + (rows.length === 1 ? " store" : " stores") }),
@@ -338,7 +353,7 @@
       this.list.appendChild(el("div", { class: "pl-empty" }, [msg]));
     }
 
-    var b = this.brandSel.value, t = this.prodSel.value;
+    var b = this.brandSel.value, t = this.prodSel.value, v = this.varSel.value;
     rows.forEach(function (r) {
       var s = r.s;
       var carried = s.products.map(function (x) { return self.prodById[x]; }).filter(function (p) {
@@ -349,7 +364,7 @@
       function drawChips(n) {
         chips.innerHTML = "";
         carried.slice(0, n).forEach(function (p) {
-          chips.appendChild(el("span", { class: "pl-chip", text: t && p.variant ? p.variant : p.name }));
+          chips.appendChild(el("span", { class: "pl-chip", text: v && !t ? (b ? p.type : p.brand + " " + p.type.replace(new RegExp("^" + p.brand + "\\s*"), "")) : t && p.variant ? p.variant : p.name }));
         });
         if (carried.length > n) chips.appendChild(el("span", { class: "pl-chip pl-more", text: "+" + (carried.length - n) + " more",
           onclick: function (e) { e.stopPropagation(); drawChips(carried.length); } }));
@@ -404,21 +419,23 @@
   // Product photo / brand logo for the current selection
   Locator.prototype.renderFeature = function () {
     var d = this.data, b = this.brandSel.value, t = this.prodSel.value, v = this.varSel.value;
+    var ok = this.wanted(), ps = ok ? d.products.filter(function (p) { return ok[p.id]; }) : [];
     var img = "", title = "", sub = "";
-    if (v) {
-      var p = this.prodById[v];
-      img = p.image; title = p.type; sub = p.variant;
-    } else if (t) {
-      var ps = d.products.filter(function (p) { return p.brand + "||" + p.type === t; });
-      var withImg = ps.filter(function (p) { return p.image; })[0];
-      img = withImg ? withImg.image : ""; title = ps[0].type;
-      var n = ps.filter(function (p) { return p.variant; }).length;
+    var withImg = ps.filter(function (p) { return p.image; })[0];
+    if (v && ps.length) {
+      title = ps[0].variant;
+      sub = t ? ps[0].type : "Available in " + ps.length + (ps.length === 1 ? " product" : " products");
+      img = withImg ? withImg.image : "";
+    } else if (t && ps.length) {
+      title = ps[0].type;
+      var n = ps.filter(isStrain).length;
       sub = n ? n + (n === 1 ? " strain" : " strains") : ps[0].brand;
+      img = withImg ? withImg.image : "";
     } else if (b) {
-      title = b; sub = d.products.filter(function (p) { return p.brand === b; }).length + " products";
+      title = b; sub = ps.length + " products";
     }
     if (!title) { this.feat.hidden = true; return; }
-    var brand = b || (t ? t.split("||")[0] : "");
+    var brand = b || (t ? t.split("||")[0] : (ps[0] ? ps[0].brand : ""));
     if (!img) img = (d.brand_images || {})[brand] || "";
     this.feat.innerHTML = "";
     if (img) {
