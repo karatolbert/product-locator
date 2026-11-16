@@ -458,6 +458,14 @@ def main():
     for v in out_by_key.values():
         v["type"], v["name"] = strip_words(v["type"]), strip_words(v["name"])
 
+    # --- rename products for the website (config: rename_products)
+    renames = {k.lower(): v for k, v in (cfg.get("rename_products") or {}).items() if not k.startswith("_")}
+    for v in out_by_key.values():
+        new = renames.get(v["type"].lower())
+        if new:
+            v["name"] = v["name"].replace(v["type"], new, 1)
+            v["type"] = new
+
     # --- product images (LeafLink /product-images/), cached per listing
     img_cache = load_json(IMG_CACHE_PATH, {})
     fetched = 0

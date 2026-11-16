@@ -132,5 +132,9 @@
   },
   "remove_words": [
     "Distillate"
-  ]
+  ],
+  "rename_products": {
+    "_about": "\"Product name as it comes from LeafLink\": \"Name to show on the website\"",
+    "Wisenheimer Tugboat All In One (1g)": "Wisenheimer Live Rosin All In One (1g)"
+  }
 }
