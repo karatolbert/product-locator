@@ -115,7 +115,10 @@
     39.522601,
     -107.77605
   ],
-  "42023 HWY 112, Del Norte, CO 81132": null,
+  "42023 HWY 112, Del Norte, CO 81132": [
+    37.678892,
+    -106.353368
+  ],
   "59722 County Rd T, Moffat, CO 81143": [
     38.129701,
     -105.920034
@@ -128,7 +131,10 @@
     39.722008,
     -105.081577
   ],
-  "2922 S Glen Ave STE B, Glenwood Springs, CO 81601": null,
+  "2922 S Glen Ave STE B, Glenwood Springs, CO 81601": [
+    39.546638,
+    -107.324694
+  ],
   "2601 West Alameda Avenue, Denver, CO 80219": [
     39.711232,
     -105.018152
@@ -457,7 +463,10 @@
     38.830331,
     -104.840764
   ],
-  "25 Clyde St, Moffat, CO 81143": null,
+  "25 Clyde St, Moffat, CO 81143": [
+    37.999511,
+    -105.908169
+  ],
   "2103 E Platte Ave, Colorado Springs, CO 80909": [
     38.836947,
     -104.790111
@@ -530,7 +539,10 @@
     40.312443,
     -105.076034
   ],
-  "18475 W Colfax Ave, Unit 140A, Golden, CO 80401": null,
+  "18475 W Colfax Ave, Unit 140A, Golden, CO 80401": [
+    39.754635,
+    -105.22058
+  ],
   "413 N Commercial St., Trinidad, CO 81082": [
     37.171317,
     -104.506916
@@ -767,7 +779,10 @@
     38.847024,
     -104.761153
   ],
-  "420 Wine Valley Road, Palisade, CO 81526": null,
+  "420 Wine Valley Road, Palisade, CO 81526": [
+    39.110259,
+    -108.350919
+  ],
   "329 E. Pikes Peak Ave., Colorado Springs, CO 80903": [
     38.833682,
     -104.819315
@@ -1072,7 +1087,10 @@
     39.740073,
     -105.116386
   ],
-  "5320 Hwy. 285, Antonito, CO 81120": null,
+  "5320 Hwy. 285, Antonito, CO 81120": [
+    37.079179,
+    -106.008632
+  ],
   "403 N Circle Dr, Colorado Springs, CO 80909": [
     38.837425,
     -104.775835
@@ -1121,7 +1139,10 @@
     39.723508,
     -104.86599
   ],
-  "157 Highway 550, Ridgway, CO 81432": null,
+  "157 Highway 550, Ridgway, CO 81432": [
+    38.152769,
+    -107.761726
+  ],
   "310 E. Main St., Cortez, CO 81321": [
     37.348736,
     -108.581025
@@ -1226,7 +1247,10 @@
     39.708582,
     -104.929823
   ],
-  "4803 N. Interstate 25, Pueblo, CO 81008": null,
+  "4803 N. Interstate 25, Pueblo, CO 81008": [
+    38.263995,
+    -104.614187
+  ],
   "34132 Highway 285, Villa Grove, CO 81155": [
     38.249354,
     -105.949511
@@ -1251,7 +1275,10 @@
     39.917261,
     -104.959423
   ],
-  "10232 Interstate 25, Walsenburg, CO 81089": null,
+  "10232 Interstate 25, Walsenburg, CO 81089": [
+    37.623523,
+    -104.780995
+  ],
   "4550 Highway 6 &, 24, De Beque, CO 81630": [
     39.326015,
     -108.208204
@@ -1264,7 +1291,10 @@
     40.032761,
     -105.259081
   ],
-  "37 CR 232, Durango, CO 81303": null,
+  "37 CR 232, Durango, CO 81303": [
+    37.276948,
+    -107.8766
+  ],
   "227 East Victory Way, Craig, CO 81625": [
     40.514327,
     -107.544205
