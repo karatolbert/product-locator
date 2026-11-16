@@ -431,13 +431,14 @@
       var n = ps.filter(isStrain).length;
       sub = n ? n + (n === 1 ? " strain" : " strains") : ps[0].brand;
       var generic = (d.type_images || {})[ps[0].type];
-      img = generic ? (/^https?:/.test(generic) ? generic : scriptBase + generic) : withImg ? withImg.image : "";
+      img = generic || (withImg ? withImg.image : "");
     } else if (b) {
       title = b; sub = ps.length + " products";
     }
     if (!title) { this.feat.hidden = true; return; }
     var brand = b || (t ? t.split("||")[0] : (ps[0] ? ps[0].brand : ""));
     if (!img) img = (d.brand_images || {})[brand] || "";
+    if (img && !/^(https?:|data:)/.test(img)) img = scriptBase + img;
     this.feat.innerHTML = "";
     if (img) {
       var im = el("img", { src: img, alt: title, loading: "lazy" });

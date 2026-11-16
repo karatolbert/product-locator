@@ -511,7 +511,7 @@ def main():
         "updated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "lookback_days": int(cfg["lookback_days"]),
         "brands": out_brands,
-        "brand_images": {b: brand_logo.get(b, "") for b in out_brands},
+        "brand_images": {b: (cfg.get("brand_logos") or {}).get(b) or brand_logo.get(b, "") for b in out_brands},
         "type_images": {t: v for t, v in (cfg.get("type_images") or {}).items()
                         if not t.startswith("_") and any(p["type"] == t for p in out_products)},
         "products": out_products,

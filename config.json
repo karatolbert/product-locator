@@ -68,5 +68,13 @@
       "Sesh Distillate Cartridge Variety Pack #1 (4000mg)",
       "Sesh Distillate Cartridge Variety Pack #2 (4000mg)"
     ]
+  },
+  "brand_logos": {
+    "_about": "Logo shown when a brand is picked. Paths are inside docs/.",
+    "Panacea": "img/brands/panacea.jpg",
+    "Sesh": "img/brands/sesh.jpg",
+    "Wisenheimer": "img/brands/wisenheimer.jpg",
+    "Boost!": "img/brands/boost.jpg",
+    "Oil": "img/brands/oil.jpg"
   }
 }
