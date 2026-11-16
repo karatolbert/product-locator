@@ -5,5 +5,8 @@
   "exclude_customer_ids": [],
   "exclude_customer_names": [],
   "exclude_license_type_keywords": ["distributor", "distribution", "manufactur", "cultivat", "processor", "transport"],
-  "hide_products_containing": ["sample", "display", "tester", "promo"]
+  "hide_products_containing": ["sample", "display", "tester", "promo"],
+  "location_overrides": {
+    "_example": "Store name exactly as shown in the locator: [latitude, longitude]. Right-click a spot in Google Maps to copy its coordinates."
+  }
 }

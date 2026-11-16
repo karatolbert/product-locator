@@ -313,14 +313,24 @@ def main():
     # --- geocode anything missing coordinates (cached between runs)
     cache = load_json(CACHE_PATH, {})
     misses = 0
+    approx = []
+    overrides = {str(k).lower(): v for k, v in (cfg.get("location_overrides") or {}).items() if not str(k).startswith("_")}
     for s in stores.values():
         if s["lat"] is not None and s["lng"] is not None:
             continue
         one = f'{s["address"]}, {s["city"]}, {s["state"]} {s["zip"]}'.strip()
-        if one in cache:
+        pin = overrides.get(s["name"].lower()) or overrides.get(str(s["id"]))
+        if pin:
+            s["lat"], s["lng"] = float(pin[0]), float(pin[1])
+            continue
+        if cache.get(one):
             hit = cache[one]
         else:
             hit = geocode_census(one) or geocode_nominatim(one)
+            if not hit:  # rural / highway addresses: fall back to the town
+                hit = geocode_nominatim(f'{s["city"]}, {s["state"]} {s["zip"]}'.strip())
+                if hit:
+                    approx.append(s["name"])
             cache[one] = hit
             misses += 1
         if hit:
@@ -389,6 +399,9 @@ def main():
     for k, v in skipped.items():
         if v:
             log(f"Skipped ({k}): {len(v)} -> {', '.join(sorted(map(str, v)))[:400]}")
+    if approx:
+        log(f"Placed at town centre (exact address not found): {', '.join(approx)}")
+        log("  -> add exact pins under location_overrides in config.json if needed")
     if no_coords:
         log(f"Could not place on map: {len(no_coords)} -> {', '.join(no_coords)[:400]}")
     log(f"Wrote {args.out}")
