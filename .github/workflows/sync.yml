@@ -31,7 +31,7 @@ jobs:
         run: |
           git config user.name "locator-bot"
           git config user.email "locator-bot@users.noreply.github.com"
-          git add docs/stores.json data/geocache.json
+          git add docs/stores.json data/geocache.json data/imagecache.json
           if git diff --cached --quiet; then
             echo "No changes"
           else

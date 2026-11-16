@@ -94,6 +94,11 @@
     ".pl-btn svg{width:18px;height:18px}",
     ".pl-body{display:grid;grid-template-columns:380px 1fr;height:var(--pl-h,620px)}",
     ".pl-side{display:flex;flex-direction:column;border-right:1px solid var(--pl-line);min-height:0}",
+    ".pl-feat{display:flex;gap:14px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--pl-line)}",
+    ".pl-feat[hidden]{display:none}",
+    ".pl-feat img{width:72px;height:72px;object-fit:contain;border-radius:10px;background:var(--pl-soft);flex:none}",
+    ".pl-feat .pl-ft{font-weight:700;font-size:15px;line-height:1.25}",
+    ".pl-feat .pl-fs{font-size:13px;color:var(--pl-muted);margin-top:2px}",
     ".pl-status{padding:10px 16px;font-size:13px;color:var(--pl-muted);border-bottom:1px solid var(--pl-line)}",
     ".pl-status b{color:#1a1a1a}",
     ".pl-list{overflow-y:auto;flex:1;min-height:0}",
@@ -157,6 +162,7 @@
     });
     this.radiusSel.value = "25";
 
+    this.feat = el("div", { class: "pl-feat", hidden: "" });
     this.status = el("div", { class: "pl-status", "aria-live": "polite", text: "Loading stores…" });
     this.list = el("div", { class: "pl-list" });
     this.mapEl = el("div", { class: "pl-map" });
@@ -167,7 +173,7 @@
       this.brandSel, this.prodSel, this.varSel, this.radiusSel
     ]));
     r.appendChild(el("div", { class: "pl-body" }, [
-      el("div", { class: "pl-side" }, [this.status, this.list]),
+      el("div", { class: "pl-side" }, [this.feat, this.status, this.list]),
       this.mapEl
     ]));
     r.appendChild(this.foot);
@@ -307,6 +313,8 @@
     rows.sort(o ? function (a, b) { return a.d - b.d; }
       : function (a, b) { return (a.s.state + a.s.city + a.s.name).localeCompare(b.s.state + b.s.city + b.s.name); });
 
+    this.renderFeature();
+
     // status line
     var what = this.varSel.value ? (this.prodSel.options[this.prodSel.selectedIndex].text + " – " + this.varSel.options[this.varSel.selectedIndex].text)
       : this.prodSel.value ? this.prodSel.options[this.prodSel.selectedIndex].text
@@ -391,6 +399,35 @@
       else if (o) this.map.setView([o.lat, o.lng], 10);
     }
     setTimeout(function () { self.map.invalidateSize(); }, 50);
+  };
+
+  // Product photo / brand logo for the current selection
+  Locator.prototype.renderFeature = function () {
+    var d = this.data, b = this.brandSel.value, t = this.prodSel.value, v = this.varSel.value;
+    var img = "", title = "", sub = "";
+    if (v) {
+      var p = this.prodById[v];
+      img = p.image; title = p.type; sub = p.variant;
+    } else if (t) {
+      var ps = d.products.filter(function (p) { return p.brand + "||" + p.type === t; });
+      var withImg = ps.filter(function (p) { return p.image; })[0];
+      img = withImg ? withImg.image : ""; title = ps[0].type;
+      var n = ps.filter(function (p) { return p.variant; }).length;
+      sub = n ? n + (n === 1 ? " strain" : " strains") : ps[0].brand;
+    } else if (b) {
+      title = b; sub = d.products.filter(function (p) { return p.brand === b; }).length + " products";
+    }
+    if (!title) { this.feat.hidden = true; return; }
+    var brand = b || (t ? t.split("||")[0] : "");
+    if (!img) img = (d.brand_images || {})[brand] || "";
+    this.feat.innerHTML = "";
+    if (img) {
+      var im = el("img", { src: img, alt: title, loading: "lazy" });
+      im.onerror = function () { im.remove(); };
+      this.feat.appendChild(im);
+    }
+    this.feat.appendChild(el("div", {}, [el("div", { class: "pl-ft", text: title }), sub ? el("div", { class: "pl-fs", text: sub }) : null]));
+    this.feat.hidden = false;
   };
 
   Locator.prototype.focus = function (id, fromList) {

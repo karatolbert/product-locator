@@ -26,6 +26,7 @@ import urllib.request
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG_PATH = os.path.join(ROOT, "config.json")
 CACHE_PATH = os.path.join(ROOT, "data", "geocache.json")
+IMG_CACHE_PATH = os.path.join(ROOT, "data", "imagecache.json")
 OUT_PATH = os.path.join(ROOT, "docs", "stores.json")
 
 DEFAULT_CONFIG = {
@@ -271,6 +272,7 @@ def main():
 
     # --- lookups
     brand_name = {b["id"]: clean(b.get("name")) for b in brands if b.get("id") is not None}
+    brand_logo = {clean(b.get("name")): b.get("image") or "" for b in brands if b.get("name")}
     prod_by_id = {}
     for p in products:
         b = p.get("brand")
@@ -282,6 +284,8 @@ def main():
             "brand_id": bid,
             "brand": bname or "Other",
             "sku": clean(p.get("sku")),
+            "image_count": p.get("image_count") or 0,
+            "modified": p.get("modified") or p.get("last_edit") or "",
         }
     cust_by_id = {c["id"]: c for c in customers if c.get("id") is not None}
 
@@ -429,6 +433,42 @@ def main():
             ptype, _, variant = p["name"].partition(" - ")
             out_by_key[key] = {"id": key, "brand": p["brand"], "type": ptype.strip(),
                                "variant": variant.strip(), "name": p["name"]}
+    # --- product images (LeafLink /product-images/), cached per listing
+    img_cache = load_json(IMG_CACHE_PATH, {})
+    fetched = 0
+    for pid in used:
+        p = prod_by_id[pid]
+        ck = str(pid)
+        if not p.get("image_count"):
+            continue
+        if ck in img_cache and img_cache[ck].get("modified") == p.get("modified"):
+            continue
+        try:
+            rows = ll.list("product-images", {"product": pid}, page_size=10)
+        except SystemExit as e:
+            log(f"  image lookup failed for {pid}: {e}")
+            continue
+        rows = [r for r in rows if ident(r.get("product")) == pid and r.get("image")]
+        rows.sort(key=lambda r: (r.get("position") or 99))
+        img_cache[ck] = {"modified": p.get("modified"), "image": rows[0]["image"] if rows else ""}
+        fetched += 1
+    save_json(IMG_CACHE_PATH, img_cache)
+    log(f"Looked up images for {fetched} listings")
+
+    for pid in used:  # first listing with a photo wins
+        k = merged[pid]
+        img = (img_cache.get(str(pid)) or {}).get("image")
+        if img and not out_by_key[k].get("image"):
+            out_by_key[k]["image"] = img
+    type_img = {}
+    for v in out_by_key.values():
+        if v.get("image"):
+            type_img.setdefault((v["brand"], v["type"]), v["image"])
+    for v in out_by_key.values():
+        if not v.get("image"):
+            v["image"] = type_img.get((v["brand"], v["type"]), "")
+    with_img = sum(1 for v in out_by_key.values() if v["image"])
+
     out_products = sorted(out_by_key.values(),
                           key=lambda p: (p["brand"].lower(), p["type"].lower(), p["variant"].lower()))
     for s in final:
@@ -454,6 +494,7 @@ def main():
         "updated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "lookback_days": int(cfg["lookback_days"]),
         "brands": out_brands,
+        "brand_images": {b: brand_logo.get(b, "") for b in out_brands},
         "products": out_products,
         "stores": out_stores,
     }
@@ -462,6 +503,7 @@ def main():
     log("")
     log(f"Orders scanned:      {len(orders)}")
     log(f"Stores in locator:   {len(out_stores)}")
+    log(f"Products with a photo: {with_img}/{len(out_products)} (rest fall back to brand logo)")
     log(f"Products in locator: {len(out_products)} across {len(out_brands)} brands: {', '.join(out_brands)}")
     for k, v in skipped.items():
         if v:
