@@ -61,4 +61,4 @@ The LeafLink key is stored only as the GitHub secret `LEAFLINK_API_KEY` (Setting
 
 - Locations come from the LeafLink customer record (delivery address preferred). Missing coordinates are looked up once with the free US Census geocoder and cached in `data/geocache.json`.
 - ZIP search on the website uses zippopotam.us; city search uses OpenStreetMap. Neither needs an account.
-- Map tiles: OpenStreetMap via CARTO. Fine for normal site traffic; if traffic grows a lot, switch to a keyed tile provider.
+- Map tiles: OpenStreetMap (free, no key). Fine for normal site traffic; if traffic grows a lot, switch to a keyed tile provider such as MapTiler.

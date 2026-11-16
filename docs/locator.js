@@ -102,7 +102,7 @@
     ".pl-feat .pl-ft{font-weight:700;font-size:15px;line-height:1.25}",
     ".pl-feat .pl-fs{font-size:13px;color:var(--pl-muted);margin-top:2px}",
     ".pl-status{padding:10px 16px;font-size:13px;color:var(--pl-muted);border-bottom:1px solid var(--pl-line)}",
-    ".pl-status b{color:#1a1a1a}",
+    ".pl-status b{color:#1a1a1a}",".pl-status a{color:var(--pl-accent);font-weight:600}",
     ".pl-list{overflow-y:auto;flex:1;min-height:0}",
     ".pl-card{padding:14px 16px;border-bottom:1px solid var(--pl-line);cursor:pointer;transition:background .15s}",
     ".pl-card:hover{background:var(--pl-soft)}",
@@ -117,6 +117,11 @@
     ".pl-links{display:flex;gap:14px;font-size:13px;font-weight:600}",
     ".pl-links a{color:var(--pl-accent);text-decoration:underline;text-underline-offset:2px}",
     ".pl-map{min-height:0;z-index:0}",
+    ".pl .leaflet-tile-pane{filter:grayscale(.85) brightness(1.04) contrast(.92)}",
+    ".pl-pin{width:34px;height:34px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);overflow:hidden;background:var(--pl-accent);transition:transform .15s}",
+    ".pl-pin img{width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.55)}",
+    ".pl-pin.pl-on{transform:scale(1.35);box-shadow:0 2px 8px rgba(0,0,0,.45)}",
+    ".pl-pin-wrap{background:none;border:0}",
     ".pl-empty{padding:30px 20px;text-align:center;color:var(--pl-muted)}",
     ".pl-foot{padding:9px 16px;font-size:12px;color:var(--pl-muted);border-top:1px solid var(--pl-line);background:var(--pl-soft)}",
     ".pl .leaflet-popup-content{font-family:inherit;font-size:14px;margin:12px 14px}",
@@ -151,7 +156,7 @@
     if (r.getAttribute("data-height")) r.style.setProperty("--pl-h", parseInt(r.getAttribute("data-height"), 10) + "px");
     r.innerHTML = "";
 
-    this.q = el("input", { type: "search", placeholder: "ZIP code or city", "aria-label": "ZIP code or city",
+    this.q = el("input", { type: "search", placeholder: "ZIP code, city, or dispensary name", "aria-label": "ZIP code, city, or dispensary name",
       onkeydown: function (e) { if (e.key === "Enter") { e.preventDefault(); self.search(); } } });
     var go = el("button", { class: "pl-btn", type: "button", text: "Search", onclick: function () { self.search(); } });
     var me = el("button", { class: "pl-btn pl-ghost", type: "button", title: "Use my location", "aria-label": "Use my location",
@@ -207,9 +212,9 @@
   Locator.prototype.initMap = function () {
     var L = window.L;
     this.map = L.map(this.mapEl, { scrollWheelZoom: false, zoomControl: true }).setView([39.5, -98.35], 4);
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-      maxZoom: 19, subdomains: "abcd",
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(this.map);
     this.layer = L.layerGroup().addTo(this.map);
     var self = this;
@@ -306,7 +311,15 @@
 
   Locator.prototype.search = function () {
     var self = this, q = this.q.value;
+    this.nameQuery = "";
     if (!q.trim()) { this.origin = null; this.render(true); return; }
+    // A dispensary name? (but a town we serve, or a ZIP, is a location search)
+    var nq = norm(q).replace(/[^a-z0-9 ]/g, "");
+    var isTown = this.data.stores.some(function (s) { return norm(s.city) === nq.replace(/\s+(co|colorado)$/, ""); });
+    if (!/^\d{5}$/.test(q.trim()) && !isTown && nq.length >= 3) {
+      var hits = this.data.stores.filter(function (s) { return norm(s.name).replace(/[^a-z0-9 ]/g, "").indexOf(nq) >= 0; });
+      if (hits.length) { this.nameQuery = nq; this.origin = null; this.render(true); return; }
+    }
     this.status.textContent = "Finding " + q + "…";
     geocode(q).then(function (o) { self.origin = o; self.render(true); })
       .catch(function () { self.status.textContent = "We couldn't find “" + q + "”. Try a 5-digit ZIP code."; });
@@ -318,7 +331,7 @@
     this.status.textContent = "Finding your location…";
     navigator.geolocation.getCurrentPosition(function (p) {
       self.origin = { lat: p.coords.latitude, lng: p.coords.longitude, label: "your location" };
-      self.q.value = "";
+      self.q.value = ""; self.nameQuery = "";
       self.render(true);
     }, function () { self.status.textContent = "Location wasn't shared. Enter a ZIP code instead."; },
     { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 });
@@ -328,7 +341,10 @@
     var self = this, L = window.L, o = this.origin;
     var radius = +this.radiusSel.value;
     var ok = this.wanted();
-    var rows = this.data.stores.filter(function (s) { return self.matches(s, ok); }).map(function (s) {
+    var nq = this.nameQuery;
+    var rows = this.data.stores.filter(function (s) {
+      return self.matches(s, ok) && (!nq || norm(s.name).replace(/[^a-z0-9 ]/g, "").indexOf(nq) >= 0);
+    }).map(function (s) {
       return { s: s, d: o ? miles([o.lat, o.lng], [s.lat, s.lng]) : null };
     });
     var total = rows.length;
@@ -344,7 +360,11 @@
     var what = pt && vt ? pt + " – " + vt : pt || (vt ? (this.brandSel.value ? this.brandSel.value + " " : "") + vt
       : (this.brandSel.value || "our products"));
     this.status.innerHTML = "";
-    if (o) {
+    if (nq) {
+      this.status.appendChild(el("span", {}, [el("b", { text: rows.length + (rows.length === 1 ? " store" : " stores") }),
+        " named \u201c" + this.q.value.trim() + "\u201d" + (ok ? " carrying " + what : "") + ". ",
+        el("a", { href: "#", text: "Show all", onclick: function (e) { e.preventDefault(); self.q.value = ""; self.nameQuery = ""; self.render(true); } })]));
+    } else if (o) {
       this.status.appendChild(el("span", {}, [el("b", { text: rows.length + (rows.length === 1 ? " store" : " stores") }),
         " carrying " + what + (radius ? " within " + radius + " mi of " : " near ") + o.label]));
     } else {
@@ -357,7 +377,8 @@
     this.markers = {};
     this.layer.clearLayers();
     if (!rows.length) {
-      var msg = o && radius && total ? "No stores within " + radius + " miles yet. Try a wider distance." :
+      var msg = nq ? "That store doesn't carry this selection. Try All brands." :
+        o && radius && total ? "No stores within " + radius + " miles yet. Try a wider distance." :
         "No stores match these filters yet.";
       this.list.appendChild(el("div", { class: "pl-empty" }, [msg]));
     }
@@ -398,8 +419,14 @@
       card.addEventListener("keydown", function (e) { if (e.key === "Enter") self.focus(s.id, true); });
       self.list.appendChild(card);
 
-      var m = L.circleMarker([s.lat, s.lng], {
-        radius: 7, weight: 2, color: "#fff", fillColor: getComputedStyle(self.root).getPropertyValue("--pl-accent").trim() || "#1a1a1a", fillOpacity: 1
+      var counts = {}, top = null;
+      carried.forEach(function (p) { counts[p.brand] = (counts[p.brand] || 0) + 1; if (!top || counts[p.brand] > counts[top]) top = p.brand; });
+      var logo = top ? (self.data.brand_images || {})[top] : "";
+      if (logo && !/^(https?:|data:)/.test(logo)) logo = scriptBase + logo;
+      var pin = '<div class="pl-pin">' + (logo ? '<img alt="" src="' + logo.replace(/"/g, "&quot;") + '">' : "") + "</div>";
+      var m = L.marker([s.lat, s.lng], {
+        icon: L.divIcon({ className: "pl-pin-wrap", html: pin, iconSize: [34, 34], iconAnchor: [17, 17], popupAnchor: [0, -16] }),
+        title: s.name, riseOnHover: true
       }).bindPopup('<div class="pl-pop"><b></b><span></span></div>');
       m.on("popupopen", function (e) {
         var c = e.popup.getElement();
@@ -424,6 +451,8 @@
     }
     setTimeout(function () { self.map.invalidateSize(); }, 50);
   };
+
+  function pinEl(m) { var e = m.getElement && m.getElement(); return e && e.querySelector(".pl-pin"); }
 
   // Product photo / brand logo for the current selection
   Locator.prototype.renderFeature = function () {
@@ -483,9 +512,13 @@
   Locator.prototype.focus = function (id, fromList) {
     var x = this.markers[id];
     if (!x) return;
-    if (this.activeId && this.markers[this.activeId]) this.markers[this.activeId].card.classList.remove("pl-on");
+    var prev = this.activeId && this.markers[this.activeId];
+    if (prev) { prev.card.classList.remove("pl-on"); pinEl(prev.m) && pinEl(prev.m).classList.remove("pl-on"); }
     this.activeId = id;
     x.card.classList.add("pl-on");
+    if (pinEl(x.m)) pinEl(x.m).classList.add("pl-on");
+    x.m.setZIndexOffset(1000);
+    if (prev && prev !== x) prev.m.setZIndexOffset(0);
     if (fromList) {
       this.map.setView(x.m.getLatLng(), Math.max(this.map.getZoom(), 13));
       x.m.openPopup();
