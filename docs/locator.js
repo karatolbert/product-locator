@@ -96,6 +96,8 @@
     ".pl-side{display:flex;flex-direction:column;border-right:1px solid var(--pl-line);min-height:0}",
     ".pl-feat{display:flex;gap:14px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--pl-line)}",
     ".pl-feat[hidden]{display:none}",
+    ".pl-imgs{display:flex;gap:6px;flex:none}",
+    ".pl-imgs.pl-multi img{width:72px;height:72px}",
     ".pl-feat img{width:96px;height:96px;object-fit:contain;border-radius:10px;background:var(--pl-soft);flex:none}",
     ".pl-feat .pl-ft{font-weight:700;font-size:15px;line-height:1.25}",
     ".pl-feat .pl-fs{font-size:13px;color:var(--pl-muted);margin-top:2px}",
@@ -154,9 +156,9 @@
     var go = el("button", { class: "pl-btn", type: "button", text: "Search", onclick: function () { self.search(); } });
     var me = el("button", { class: "pl-btn pl-ghost", type: "button", title: "Use my location", "aria-label": "Use my location",
       html: ICON_LOC, onclick: function () { self.locate(); } });
-    this.brandSel = el("select", { "aria-label": "Brand", onchange: function () { self.fillTypes(); self.fillVariants(true); self.render(true); } });
-    this.prodSel = el("select", { "aria-label": "Product", class: "pl-prod", onchange: function () { self.fillVariants(true); self.render(true); } });
-    this.varSel = el("select", { "aria-label": "Strain", class: "pl-var", onchange: function () { self.render(true); } });
+    this.brandSel = el("select", { "aria-label": "Brand", onchange: function () { self.refresh(); self.render(true); } });
+    this.prodSel = el("select", { "aria-label": "Product", class: "pl-prod", onchange: function () { self.refresh(); self.render(true); } });
+    this.varSel = el("select", { "aria-label": "Strain", class: "pl-var", onchange: function () { self.refresh(); self.render(true); } });
     this.radiusSel = el("select", { "aria-label": "Distance", onchange: function () { self.render(true); } });
     [["10", "10 mi"], ["25", "25 mi"], ["50", "50 mi"], ["100", "100 mi"], ["0", "Any distance"]].forEach(function (o) {
       self.radiusSel.appendChild(el("option", { value: o[0], text: o[1] }));
@@ -236,16 +238,23 @@
       }
     }
     if (this.initStrain) { this.fillVariants(); this.varSel.value = norm(this.initStrain); }
-    this.fillVariants(true);
+    this.refresh();
+  };
+
+  // Keep Brand / Product / Strain consistent with each other
+  Locator.prototype.refresh = function () {
+    this.fillTypes(); this.fillVariants(true); this.fillTypes();
   };
 
   // Product = product type within a brand (e.g. "Oil Tugboat All In One (1g)")
   Locator.prototype.fillTypes = function () {
-    var b = this.brandSel.value, s = this.prodSel, prev = s.value, seen = {}, groups = {};
+    var b = this.brandSel.value, v = this.varSel.value, s = this.prodSel, prev = s.value, seen = {}, groups = {};
     s.innerHTML = "";
-    s.appendChild(el("option", { value: "", text: b ? "All " + b + " products" : "All products" }));
+    var vt = v && this.varSel.selectedIndex > 0 ? this.varSel.options[this.varSel.selectedIndex].text + " " : "";
+    s.appendChild(el("option", { value: "", text: "All " + (b ? b + " " : "") + vt + "products" }));
     this.data.products.forEach(function (p) {
       if (b && p.brand !== b) return;
+      if (v && norm(p.variant) !== v) return;   // strain picked first: only products it comes in
       var k = p.brand + "||" + p.type;
       if (seen[k]) return;
       seen[k] = 1;
@@ -420,19 +429,26 @@
   Locator.prototype.renderFeature = function () {
     var d = this.data, b = this.brandSel.value, t = this.prodSel.value, v = this.varSel.value;
     var ok = this.wanted(), ps = ok ? d.products.filter(function (p) { return ok[p.id]; }) : [];
-    var img = "", title = "", sub = "";
+    var img = "", title = "", sub = "", imgs = null;
     var withImg = ps.filter(function (p) { return p.image; })[0];
     if (v && ps.length) {
       title = ps[0].variant;
       sub = t ? ps[0].type : "Available in " + ps.length + (ps.length === 1 ? " product" : " products");
       img = withImg ? withImg.image : "";
+      var sticker = false;
       if (!t) {  // strain picked on its own: use the brand's strain artwork if there is one
         var si = d.strain_images || {};
         var brands = b ? [b] : ps.map(function (p) { return p.brand; });
         for (var i = 0; i < brands.length; i++) {
           var m = si[brands[i]] || {}, hit = null;
           for (var k in m) if (norm(k) === v) hit = m[k];
-          if (hit) { img = hit; break; }
+          if (hit) { img = hit; sticker = true; break; }
+        }
+        if (!sticker) {  // no artwork: show each product's photo (up to 3)
+          var seenI = {};
+          imgs = ps.filter(function (p) { return p.image && !seenI[p.image] && (seenI[p.image] = 1); })
+                   .slice(0, 3).map(function (p) { return { src: p.image, alt: p.type }; });
+          if (imgs.length < 2) imgs = null;
         }
       }
     } else if (t && ps.length) {
@@ -449,10 +465,16 @@
     if (!img) img = (d.brand_images || {})[brand] || "";
     if (img && !/^(https?:|data:)/.test(img)) img = scriptBase + img;
     this.feat.innerHTML = "";
-    if (img) {
-      var im = el("img", { src: img, alt: title, loading: "lazy" });
-      im.onerror = function () { im.remove(); };
-      this.feat.appendChild(im);
+    if (!imgs && img) imgs = [{ src: img, alt: title }];
+    if (imgs) {
+      var box = el("div", { class: "pl-imgs" + (imgs.length > 1 ? " pl-multi" : "") });
+      imgs.forEach(function (x) {
+        var src = /^(https?:|data:)/.test(x.src) ? x.src : scriptBase + x.src;
+        var im = el("img", { src: src, alt: x.alt, title: x.alt, loading: "lazy" });
+        im.onerror = function () { im.remove(); };
+        box.appendChild(im);
+      });
+      this.feat.appendChild(box);
     }
     this.feat.appendChild(el("div", {}, [el("div", { class: "pl-ft", text: title }), sub ? el("div", { class: "pl-fs", text: sub }) : null]));
     this.feat.hidden = false;
