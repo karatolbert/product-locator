@@ -164,6 +164,41 @@ def geocode_nominatim(one_line):
     return None
 
 
+ENTITY = re.compile(r"[,\s]*\b(L\.?L\.?C\.?|Inc\.?|Corp\.?|Corporation|Ltd\.?|Co\.? LLC|Holdings|Ventures|Enterprises)\s*\.?$", re.I)
+ENTITY_ANY = re.compile(r"\b(LLC|L\.L\.C|Inc|Corp|Holdings|Ventures|Enterprises)\b\.?", re.I)
+
+
+def tidy(n):
+    n = clean(n).strip(" ,-")
+    n = re.sub(r"\s*(?:-\s*(?:REC|MED)|\((?:REC|MED|Rec|Med)\))\s*$", "", n).strip(" ,-")
+    for _ in range(3):
+        n = ENTITY.sub("", n).strip(" ,-")
+    if n and (n.isupper() or n.islower()) and len(n) > 4:
+        n = " ".join(w if (w.isupper() and len(w) <= 3) else w.capitalize() for w in n.split())
+    return n
+
+
+def store_name(c, overrides):
+    """Pick the name a shopper would recognise from LeafLink's name/dba/nickname."""
+    for k in (str(c.get("id")), clean(c.get("name")).lower(), clean(c.get("dba")).lower()):
+        if k and k in overrides:
+            return overrides[k]
+    name, dba, nick = clean(c.get("name")), clean(c.get("dba")), clean(c.get("nickname"))
+    if nick:
+        return tidy(nick)
+    for raw in (name, dba):
+        m = re.search(r"\b(?:d/?b/?a|aka)\b[:\s-]*(.+)$", raw, re.I)
+        if m:
+            return tidy(m.group(1))
+        m = re.search(r"\(([^)]+)\)", raw)
+        if m and ENTITY_ANY.search(raw) and not re.fullmatch(r"\s*(rec|med|medical|recreational)\s*", m.group(1), re.I):
+            return tidy(m.group(1))
+    for raw in (name, dba):
+        if raw and not ENTITY_ANY.search(raw):
+            return tidy(raw)
+    return tidy(name or dba or c.get("display_name") or "")
+
+
 # ---------------------------------------------------------------- main build
 def pick_address(cust, order_addr):
     """Prefer the customer's delivery address (the storefront)."""
@@ -246,6 +281,7 @@ def main():
     excl_names = [n.lower() for n in cfg["exclude_customer_names"]]
     excl_lic = [k.lower() for k in cfg["exclude_license_type_keywords"]]
 
+    name_over = {str(k).lower(): v for k, v in (cfg.get("name_overrides") or {}).items() if not str(k).startswith("_")}
     stores = {}
     skipped = {"customer_excluded": set(), "no_address": set(), "archived": set()}
 
@@ -255,7 +291,9 @@ def main():
         cust = cust_by_id.get(cid) or (c_ref if isinstance(c_ref, dict) else {})
         if cid is None:
             continue
-        name = clean(cust.get("dba") or cust.get("display_name") or cust.get("name") or cust.get("nickname"))
+        name = store_name(cust, name_over) if cust else ""
+        if not name:
+            name = clean(c_ref.get("display_name") if isinstance(c_ref, dict) else "")
         lic = clean(cust.get("license_type") if not isinstance(cust.get("license_type"), dict)
                     else cust["license_type"].get("type") or cust["license_type"].get("name")).lower()
 
@@ -337,6 +375,25 @@ def main():
             s["lat"], s["lng"] = hit
     save_json(CACHE_PATH, cache)
     log(f"Geocoded {misses} new addresses")
+
+    # One storefront often has separate REC and MED accounts: merge by address.
+    by_addr = {}
+    for s in list(stores.values()):
+        k = (re.sub(r"[^a-z0-9]", "", s["address"].lower()), s["zip"])
+        if k in by_addr:
+            keep = by_addr[k]
+            for pid, when in s["products"].items():
+                keep["products"][pid] = max(keep["products"].get(pid, ""), when)
+            keep["last_order"] = max(keep["last_order"], s["last_order"])
+            keep["phone"] = keep["phone"] or s["phone"]
+            keep["website"] = keep["website"] or s["website"]
+            if len(s["name"]) < len(keep["name"]):
+                keep["name"] = s["name"]
+            keep["name"] = re.sub(r"\s*[-(]\s*(REC|MED|Rec|Med|Medical|Recreational)\)?\s*$", "", keep["name"]).strip()
+            del stores[s["id"]]
+        else:
+            by_addr[k] = s
+    log(f"Storefronts after merging shared addresses: {len(stores)}")
 
     no_coords = [s["name"] for s in stores.values() if s["lat"] is None]
     final = [s for s in stores.values() if s["lat"] is not None]

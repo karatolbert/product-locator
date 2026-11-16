@@ -34,6 +34,7 @@ Links can also preselect filters, which is handy for Instagram bios and posts:
 | `exclude_customer_ids` / `exclude_customer_names` | Accounts that should never appear (e.g. a store that asked to be left off). |
 | `exclude_license_type_keywords` | Hides non-retail accounts such as distributors and processors. |
 | `hide_products_containing` | Keeps samples, displays and testers out of the product list. |
+| `name_overrides` | Rename a store, e.g. `"Spff Colo": "The Real Store Name"`. Use the name as it currently shows in the locator. |
 | `location_overrides` | Exact map pins for stores whose address can't be looked up, e.g. `"Outcrop Dispensary": [37.68, -106.35]`. |
 
 Edit the file on github.com (pencil icon) and commit. The change applies on the next run, or immediately if you use **Actions → Refresh product locator → Run workflow**.
