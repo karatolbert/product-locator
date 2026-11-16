@@ -84,10 +84,10 @@
     ".pl{--pl-accent:#1a1a1a;--pl-line:#e3e3e3;--pl-muted:#6b6b6b;--pl-bg:#fff;--pl-soft:#f6f6f4;",
     "font-family:inherit;color:#1a1a1a;background:var(--pl-bg);border:1px solid var(--pl-line);border-radius:14px;overflow:hidden;line-height:1.4;font-size:15px;text-align:left}",
     ".pl *{box-sizing:border-box}",
-    ".pl-bar{display:grid;grid-template-columns:minmax(200px,1.6fr) 1fr 1.3fr 110px;gap:10px;padding:14px;border-bottom:1px solid var(--pl-line);background:var(--pl-soft)}",
+    ".pl-bar{display:grid;grid-template-columns:minmax(230px,1.5fr) .8fr 1.4fr 1fr 104px;gap:10px;padding:14px;border-bottom:1px solid var(--pl-line);background:var(--pl-soft)}",
     ".pl-search{display:flex;gap:6px}",
     ".pl input,.pl select{width:100%;height:42px;border:1px solid var(--pl-line);border-radius:9px;padding:0 12px;font:inherit;font-size:15px;background:#fff;color:inherit;margin:0;-webkit-appearance:none;appearance:none}",
-    ".pl select{background-image:linear-gradient(45deg,transparent 50%,#888 50%),linear-gradient(135deg,#888 50%,transparent 50%);background-position:calc(100% - 17px) 18px,calc(100% - 12px) 18px;background-size:5px 5px;background-repeat:no-repeat;padding-right:30px;text-overflow:ellipsis}",
+    ".pl select:disabled{opacity:.5;cursor:not-allowed}.pl select{background-image:linear-gradient(45deg,transparent 50%,#888 50%),linear-gradient(135deg,#888 50%,transparent 50%);background-position:calc(100% - 17px) 18px,calc(100% - 12px) 18px;background-size:5px 5px;background-repeat:no-repeat;padding-right:30px;text-overflow:ellipsis}",
     ".pl input:focus,.pl select:focus{outline:2px solid var(--pl-accent);outline-offset:-1px}",
     ".pl-btn{height:42px;min-width:42px;border:0;border-radius:9px;background:var(--pl-accent);color:#fff;font:inherit;font-size:14px;font-weight:600;padding:0 14px;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:6px}",
     ".pl-btn.pl-ghost{background:#fff;color:var(--pl-accent);border:1px solid var(--pl-line)}",
@@ -115,7 +115,7 @@
     ".pl .leaflet-popup-content{font-family:inherit;font-size:14px;margin:12px 14px}",
     ".pl-pop b{display:block;font-size:15px;margin-bottom:2px}",
     "@media (max-width:860px){.pl-bar{grid-template-columns:1fr 104px}.pl-search{grid-column:1/-1}",
-    ".pl-bar .pl-prod{grid-column:1/-1;order:3}",
+    ".pl-bar .pl-prod,.pl-bar .pl-var{grid-column:1/-1;order:3}",
     ".pl-body{grid-template-columns:1fr;grid-template-rows:300px auto;height:auto}",
     ".pl-map{order:-1;height:300px}.pl-side{border-right:0}.pl-list{max-height:none}}"
   ].join("");
@@ -148,8 +148,9 @@
     var go = el("button", { class: "pl-btn", type: "button", text: "Search", onclick: function () { self.search(); } });
     var me = el("button", { class: "pl-btn pl-ghost", type: "button", title: "Use my location", "aria-label": "Use my location",
       html: ICON_LOC, onclick: function () { self.locate(); } });
-    this.brandSel = el("select", { "aria-label": "Brand", onchange: function () { self.fillProducts(); self.render(true); } });
-    this.prodSel = el("select", { "aria-label": "Product", class: "pl-prod", onchange: function () { self.render(true); } });
+    this.brandSel = el("select", { "aria-label": "Brand", onchange: function () { self.fillTypes(); self.fillVariants(); self.render(true); } });
+    this.prodSel = el("select", { "aria-label": "Product", class: "pl-prod", onchange: function () { self.fillVariants(); self.render(true); } });
+    this.varSel = el("select", { "aria-label": "Flavor", class: "pl-var", onchange: function () { self.render(true); } });
     this.radiusSel = el("select", { "aria-label": "Distance", onchange: function () { self.render(true); } });
     [["10", "10 mi"], ["25", "25 mi"], ["50", "50 mi"], ["100", "100 mi"], ["0", "Any distance"]].forEach(function (o) {
       self.radiusSel.appendChild(el("option", { value: o[0], text: o[1] }));
@@ -163,7 +164,7 @@
 
     r.appendChild(el("div", { class: "pl-bar" }, [
       el("div", { class: "pl-search" }, [this.q, go, me]),
-      this.brandSel, this.prodSel, this.radiusSel
+      this.brandSel, this.prodSel, this.varSel, this.radiusSel
     ]));
     r.appendChild(el("div", { class: "pl-body" }, [
       el("div", { class: "pl-side" }, [this.status, this.list]),
@@ -208,42 +209,70 @@
   };
 
   Locator.prototype.fillBrands = function () {
-    var s = this.brandSel, self = this;
+    var s = this.brandSel, self = this, d = this.data;
     s.innerHTML = "";
     s.appendChild(el("option", { value: "", text: "All brands" }));
-    this.data.brands.forEach(function (b) { s.appendChild(el("option", { value: b, text: b })); });
-    var want = this.data.brands.filter(function (b) { return norm(b) === norm(self.initBrand); })[0];
+    d.brands.forEach(function (b) { s.appendChild(el("option", { value: b, text: b })); });
+    var want = d.brands.filter(function (b) { return norm(b) === norm(self.initBrand); })[0];
     if (want) s.value = want;
-    this.fillProducts();
-    if (this.initProduct) {
-      var p = this.data.products.filter(function (p) {
-        return String(p.id) === self.initProduct || norm(p.name) === norm(self.initProduct);
-      })[0];
-      if (p) { if (!s.value) { s.value = p.brand; this.fillProducts(); } this.prodSel.value = String(p.id); }
+    this.fillTypes();
+    var q = norm(this.initProduct);
+    if (q) {
+      var p = d.products.filter(function (p) { return p.id === q || norm(p.name) === q; })[0];
+      var t = p ? null : d.products.filter(function (p) { return norm(p.type) === q; })[0];
+      var hit = p || t;
+      if (hit) {
+        s.value = hit.brand; this.fillTypes();
+        this.prodSel.value = hit.brand + "||" + hit.type;
+        this.fillVariants();
+        if (p && p.variant) this.varSel.value = p.id;
+      }
     }
+    this.fillVariants(true);
   };
 
-  Locator.prototype.fillProducts = function () {
-    var b = this.brandSel.value, s = this.prodSel, prev = s.value;
+  // Product = product type within a brand (e.g. "Oil Tugboat All In One (1g)")
+  Locator.prototype.fillTypes = function () {
+    var b = this.brandSel.value, s = this.prodSel, prev = s.value, seen = {}, groups = {};
     s.innerHTML = "";
     s.appendChild(el("option", { value: "", text: b ? "All " + b + " products" : "All products" }));
-    var groups = {};
     this.data.products.forEach(function (p) {
       if (b && p.brand !== b) return;
+      var k = p.brand + "||" + p.type;
+      if (seen[k]) return;
+      seen[k] = 1;
       (groups[p.brand] = groups[p.brand] || []).push(p);
     });
     Object.keys(groups).sort().forEach(function (g) {
       var parent = b ? s : s.appendChild(el("optgroup", { label: g }));
-      groups[g].forEach(function (p) { parent.appendChild(el("option", { value: String(p.id), text: p.name })); });
+      groups[g].forEach(function (p) { parent.appendChild(el("option", { value: p.brand + "||" + p.type, text: p.type })); });
     });
-    if (prev && s.querySelector('option[value="' + prev + '"]')) s.value = prev;
+    if (prev && seen[prev]) s.value = prev;
   };
 
-  Locator.prototype.matches = function (store) {
-    var b = this.brandSel.value, pid = this.prodSel.value, self = this;
-    if (pid) return store.products.some(function (x) { return String(x) === pid; });
-    if (b) return store.products.some(function (x) { var p = self.prodById[x]; return p && p.brand === b; });
-    return true;
+  // Flavor = the specific product within a type
+  Locator.prototype.fillVariants = function (keep) {
+    var s = this.varSel, t = this.prodSel.value, prev = s.value;
+    s.innerHTML = "";
+    var vs = !t ? [] : this.data.products.filter(function (p) { return p.brand + "||" + p.type === t && p.variant; });
+    s.appendChild(el("option", { value: "", text: !t ? "Flavor" : vs.length ? "All flavors" : "—" }));
+    vs.forEach(function (p) { s.appendChild(el("option", { value: p.id, text: p.variant })); });
+    s.disabled = !vs.length;
+    if (keep && prev && vs.some(function (p) { return p.id === prev; })) s.value = prev;
+  };
+
+  Locator.prototype.wanted = function () {
+    var b = this.brandSel.value, t = this.prodSel.value, v = this.varSel.value;
+    if (!b && !t && !v) return null;
+    var ok = {};
+    this.data.products.forEach(function (p) {
+      if (v ? p.id === v : t ? p.brand + "||" + p.type === t : p.brand === b) ok[p.id] = 1;
+    });
+    return ok;
+  };
+
+  Locator.prototype.matches = function (store, ok) {
+    return !ok || store.products.some(function (x) { return ok[x]; });
   };
 
   Locator.prototype.search = function () {
@@ -269,7 +298,8 @@
   Locator.prototype.render = function (fit) {
     var self = this, L = window.L, o = this.origin;
     var radius = +this.radiusSel.value;
-    var rows = this.data.stores.filter(function (s) { return self.matches(s); }).map(function (s) {
+    var ok = this.wanted();
+    var rows = this.data.stores.filter(function (s) { return self.matches(s, ok); }).map(function (s) {
       return { s: s, d: o ? miles([o.lat, o.lng], [s.lat, s.lng]) : null };
     });
     var total = rows.length;
@@ -278,7 +308,8 @@
       : function (a, b) { return (a.s.state + a.s.city + a.s.name).localeCompare(b.s.state + b.s.city + b.s.name); });
 
     // status line
-    var what = this.prodSel.value ? this.prodSel.options[this.prodSel.selectedIndex].text
+    var what = this.varSel.value ? (this.prodSel.options[this.prodSel.selectedIndex].text + " – " + this.varSel.options[this.varSel.selectedIndex].text)
+      : this.prodSel.value ? this.prodSel.options[this.prodSel.selectedIndex].text
       : (this.brandSel.value || "our products");
     this.status.innerHTML = "";
     if (o) {
@@ -299,18 +330,18 @@
       this.list.appendChild(el("div", { class: "pl-empty" }, [msg]));
     }
 
-    var b = this.brandSel.value, pid = this.prodSel.value;
+    var b = this.brandSel.value, t = this.prodSel.value;
     rows.forEach(function (r) {
       var s = r.s;
       var carried = s.products.map(function (x) { return self.prodById[x]; }).filter(function (p) {
-        return p && (pid ? String(p.id) === pid : !b || p.brand === b);
+        return p && (!ok || ok[p.id]);
       });
       var chips = el("div", { class: "pl-chips" });
       var showN = 5;
       function drawChips(n) {
         chips.innerHTML = "";
         carried.slice(0, n).forEach(function (p) {
-          chips.appendChild(el("span", { class: "pl-chip", text: (b ? "" : p.brand + " · ") + p.name }));
+          chips.appendChild(el("span", { class: "pl-chip", text: t && p.variant ? p.variant : p.name }));
         });
         if (carried.length > n) chips.appendChild(el("span", { class: "pl-chip pl-more", text: "+" + (carried.length - n) + " more",
           onclick: function (e) { e.stopPropagation(); drawChips(carried.length); } }));

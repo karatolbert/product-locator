@@ -16,6 +16,7 @@ import argparse
 import datetime as dt
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -331,11 +332,34 @@ def main():
     final = [s for s in stores.values() if s["lat"] is not None]
 
     # --- output
+    # LeafLink often has several listings for the same product (batches, price
+    # tiers). Merge them by brand + name, and split "Type - Flavor" names so the
+    # widget can offer Brand -> Product -> Flavor.
+    def slug(*parts):
+        s = "-".join(parts).lower()
+        return "".join(ch if ch.isalnum() else "-" for ch in s).strip("-").replace("--", "-")
+
+    merged = {}   # leaflink id -> merged product key
+    out_by_key = {}
     used = {pid for s in final for pid in s["products"]}
-    out_products = sorted(
-        ({"id": p["id"], "name": p["name"], "brand": p["brand"]} for pid, p in prod_by_id.items() if pid in used),
-        key=lambda p: (p["brand"].lower(), p["name"].lower()),
-    )
+    for pid in used:
+        p = dict(prod_by_id[pid])
+        # "... - REC" / "... - MED" listings are the same product for shoppers
+        p["name"] = re.sub(r"\s*[-(]\s*(REC|MED|Rec|Med)\)?\s*$", "", p["name"]).strip()
+        key = slug(p["brand"], p["name"])
+        merged[pid] = key
+        if key not in out_by_key:
+            ptype, _, variant = p["name"].partition(" - ")
+            out_by_key[key] = {"id": key, "brand": p["brand"], "type": ptype.strip(),
+                               "variant": variant.strip(), "name": p["name"]}
+    out_products = sorted(out_by_key.values(),
+                          key=lambda p: (p["brand"].lower(), p["type"].lower(), p["variant"].lower()))
+    for s in final:
+        prods = {}
+        for pid, when in s["products"].items():
+            k = merged[pid]
+            prods[k] = max(prods.get(k, ""), when)
+        s["products"] = prods
     out_brands = sorted({p["brand"] for p in out_products}, key=str.lower)
     out_stores = []
     for s in sorted(final, key=lambda s: (s["state"], s["city"], s["name"])):
