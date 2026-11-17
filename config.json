@@ -75,7 +75,8 @@
     "Sesh": "img/brands/sesh.jpg",
     "Wisenheimer": "img/brands/wisenheimer.jpg",
     "Boost!": "img/brands/boost.jpg",
-    "Oil": "img/brands/oil.jpg"
+    "Oil": "img/brands/oil.jpg",
+    "Oil Twists": "img/brands/oil-twists.jpg"
   },
   "strain_images": {
     "_about": "Strain artwork shown when a strain is picked without a product. Grouped by brand; strain names match LeafLink.",
