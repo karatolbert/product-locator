@@ -98,7 +98,19 @@
     ".pl-rail.pl-has-sel .pl-logo:not(.pl-sel):hover .pl-lc{opacity:.9;filter:none}",
     ".pl-all{background:var(--pl-accent);color:#fff;font-weight:700;font-size:15px;letter-spacing:.02em}",
     ".pl-bar{display:grid;grid-template-columns:1fr 120px;gap:10px;padding:12px 16px 12px}",
-    ".pl-pick{border-top:1px solid var(--pl-line);background:#fff}",
+    ".pl-pick{border-top:1px solid var(--pl-line);background:#fff;display:grid;grid-template-columns:214px 1fr}",
+    ".pl-pmain{min-width:0}",
+    ".pl-types{border-right:1px solid var(--pl-line);padding:12px 10px 14px 14px;display:flex;flex-direction:column;gap:2px}",
+    ".pl-types-h{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--pl-muted);padding:4px 6px 6px}",
+    ".pl-type{display:flex;align-items:center;gap:8px;padding:6px;border-radius:8px;cursor:pointer;font-size:13.5px;color:#1a1a1a;user-select:none}",
+    ".pl-type:hover{background:var(--pl-soft)}",
+    ".pl-type input{position:absolute;opacity:0;width:1px;height:1px}",
+    ".pl-type input:focus-visible+.pl-tbox{outline:2px solid var(--pl-accent);outline-offset:2px}",
+    ".pl-tbox{flex:none;width:18px;height:18px;border-radius:5px;border:1.5px solid #c4c4c4;background:#fff;display:flex;align-items:center;justify-content:center}",
+    ".pl-tbox svg{width:12px;height:12px;opacity:0}",
+    ".pl-type.pl-sel .pl-tbox{background:var(--pl-accent);border-color:var(--pl-accent)}.pl-type.pl-sel .pl-tbox svg{opacity:1}",
+    ".pl-type.pl-sel{font-weight:600}",
+    ".pl-ticn{flex:none;width:24px;height:24px;color:#333}.pl-ticn svg{width:24px;height:24px}",
     ".pl-ph{display:flex;align-items:center;gap:10px;padding:10px 16px;flex-wrap:wrap}",
     ".pl-tabs{display:inline-flex;background:var(--pl-soft);border:1px solid var(--pl-line);border-radius:999px;padding:3px}",
     ".pl-tab{border:0;background:none;font:inherit;font-size:14px;font-weight:600;color:var(--pl-muted);padding:7px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}",
@@ -179,6 +191,12 @@
     ".pl-lc{width:52px;height:52px}.pl-logo{font-size:11px}",
     ".pl-bar{padding:10px 14px 12px}",
     ".pl-ph{padding:10px 14px;gap:8px}.pl-pf{max-width:none;order:5;flex-basis:100%}",
+    ".pl-pick{grid-template-columns:1fr}",
+    ".pl-types{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--pl-line);padding:10px 14px;gap:6px;scrollbar-width:none}",
+    ".pl-types::-webkit-scrollbar{display:none}.pl-types-h{display:none}",
+    ".pl-type{flex:none;border:1px solid var(--pl-line);border-radius:999px;padding:5px 11px 5px 7px;font-size:13px}",
+    ".pl-type .pl-tbox{display:none}.pl-type.pl-sel{background:var(--pl-accent);border-color:var(--pl-accent);color:#fff}.pl-type.pl-sel .pl-ticn{color:#fff}",
+    ".pl-ticn,.pl-ticn svg{width:20px;height:20px}",
     ".pl-tab{font-size:13.5px;padding:7px 11px}",
     ".pl-bar{grid-template-columns:1fr 82px!important}.pl-bar .pl-search{grid-column:auto!important;min-width:0}",
     ".pl-search input{min-width:0}.pl-bar select{padding-right:24px;background-position:calc(100% - 15px) 18px,calc(100% - 10px) 18px}",
@@ -254,7 +272,7 @@
     this.selCats = {};       // "cart" / "aio" / ... -> true
     this.selTypes = {};      // "Brand||Type" -> true
     this.selStrains = {};    // normalised strain -> display name
-    this.tab = "cat";
+    this.tab = "product";
     this.pickFilter = "";
     this.radiusSel = el("select", { "aria-label": "Distance", onchange: function () { self.render(true); } });
     [["10", "10 mi"], ["25", "25 mi"], ["50", "50 mi"], ["100", "100 mi"], ["0", "Any distance"]].forEach(function (o) {
@@ -444,7 +462,6 @@
     var self = this;
     this.pick = el("div", { class: "pl-pick" });
     function go(t) { return function () { self.tab = t; self.pickFilter = ""; self.pf.value = ""; self.open(); self.renderPicker(); }; }
-    this.tabC = el("button", { type: "button", class: "pl-tab", onclick: go("cat") });
     this.tabP = el("button", { type: "button", class: "pl-tab", onclick: go("product") });
     this.tabS = el("button", { type: "button", class: "pl-tab", onclick: go("strain") });
     this.pf = el("input", { type: "search", class: "pl-pf", placeholder: "Find a product",
@@ -456,10 +473,35 @@
     this.grid = el("div", { class: "pl-grid", role: "group" });
     this.pick.appendChild(el("div", { class: "pl-ph" }, [
       el("span", { class: "pl-shopby", text: "Shop by" }),
-      el("div", { class: "pl-tabs", role: "tablist" }, [this.tabC, this.tabP, this.tabS]), this.pf, this.clearBtn, this.toggleBtn]));
+      el("div", { class: "pl-tabs", role: "tablist" }, [this.tabP, this.tabS]), this.pf, this.clearBtn, this.toggleBtn]));
     this.pick.appendChild(this.grid);
+    this.typeBox = el("div", { class: "pl-types", role: "group", "aria-label": "Product type" });
+    var main = el("div", { class: "pl-pmain" });
+    while (this.pick.firstChild) main.appendChild(this.pick.firstChild);
+    this.pick.appendChild(this.typeBox);
+    this.pick.appendChild(main);
     return this.pick;
   };
+  // Small checkbox list of device types, beside the Product / Strain grid
+  Locator.prototype.renderTypes = function () {
+    var self = this, box = this.typeBox, opts = this.catOptions();
+    box.innerHTML = "";
+    box.appendChild(el("div", { class: "pl-types-h", text: "Type" }));
+    opts.forEach(function (o) {
+      var on = !!self.selCats[o.key];
+      var row = el("label", { class: "pl-type" + (on ? " pl-sel" : "") }, [
+        el("input", { type: "checkbox", onchange: function () {
+          if (self.selCats[o.key]) delete self.selCats[o.key]; else self.selCats[o.key] = true;
+          self.refresh(); self.render(true); } }),
+        el("span", { class: "pl-tbox", html: CHECK }),
+        el("span", { class: "pl-ticn", html: ICONS[o.key] }),
+        el("span", { class: "pl-tlabel", text: o.name })
+      ]);
+      row.querySelector("input").checked = on;
+      box.appendChild(row);
+    });
+  };
+
   Locator.prototype.open = function () { this.pick.classList.remove("pl-closed"); };
 
   // Simple line icons for each kind of device (64x64, stroke = currentColor)
@@ -467,17 +509,12 @@
     return '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">' + body + "</svg>";
   }
   var ICONS = {
-    cart: svg('<rect x="27" y="5" width="10" height="9" rx="2"/><rect x="23" y="14" width="18" height="30" rx="3.5"/>' +
-      '<rect x="26" y="29" width="12" height="12" rx="1.5" fill="currentColor" opacity=".22" stroke="none"/><path d="M26 29h12"/>' +
-      '<path d="M26 44v12h12V44"/><path d="M26 49h12M26 52.5h12"/>'),
-    aio: svg('<path d="M27 5h10l2 9H25z"/><rect x="19" y="14" width="26" height="45" rx="7"/>' +
-      '<rect x="26.5" y="22" width="11" height="17" rx="3.5"/><rect x="28.5" y="30" width="7" height="7" rx="1.5" fill="currentColor" opacity=".22" stroke="none"/>' +
-      '<circle cx="32" cy="49" r="2.4"/>'),
+    cart: svg('<path d="M26 15v-4.5a6 6 0 0 1 12 0V15"/><path d="M24.5 15h15"/><rect x="23" y="15" width="18" height="29" rx="4"/><rect x="26" y="30" width="12" height="11" rx="2" fill="currentColor" opacity=".22" stroke="none"/><path d="M26 30h12"/><path d="M26.5 44v12h11V44"/><path d="M26.5 49h11M26.5 52.5h11"/>'),
+    aio: svg('<path d="M25 5.5h14l2 9H23z"/><rect x="15" y="14.5" width="34" height="44" rx="6"/><rect x="25.5" y="22" width="13" height="18" rx="3"/><rect x="27.5" y="31" width="9" height="7" rx="1.5" fill="currentColor" opacity=".22" stroke="none"/><circle cx="32" cy="49.5" r="2.4"/>'),
     pack: svg('<rect x="8" y="16" width="48" height="40" rx="5"/><path d="M8 24h48"/>' +
       '<rect x="14" y="30" width="6" height="18" rx="2"/><rect x="24" y="30" width="6" height="18" rx="2"/>' +
       '<rect x="34" y="30" width="6" height="18" rx="2"/><rect x="44" y="30" width="6" height="18" rx="2"/><path d="M22 10h20"/>'),
-    preroll: svg('<path d="M27.5 46 20 9h24l-7.5 37"/><path d="M20 9c3.5-3.5 20.5-3.5 24 0"/><rect x="27" y="46" width="10" height="12" rx="2"/>' +
-      '<path d="M27 50.5h10"/><path d="M25 22c4 1.5 10 1.5 14 0M26.5 31c3 1.2 8 1.2 11 0" opacity=".55"/>'),
+    preroll: svg('<path d="M27.5 48 20 19M36.5 48 44 19"/><rect x="27" y="48" width="10" height="10" rx="2"/><path d="M27 52h10"/><path d="M20 19c2.5-4 7-7.5 10.5-10M44 19c-2.5-4-7-7.5-10.5-10"/><path d="M30.5 9c.8 1 2.2 1 3 0"/><path d="M30.5 9c-1.5-2.5 4.5-2.8 2.6-5.4-.8-1.1-.4-2.6 1.2-3"/>'),
     battery: svg('<path d="M28 9V4h8v5"/><rect x="25" y="9" width="14" height="50" rx="5"/><circle cx="32" cy="21" r="3"/>' +
       '<path d="M29 48h6M29 52h6" opacity=".7"/>'),
     syringe: svg('<path d="M23 5h18M32 5v10"/><rect x="25" y="15" width="14" height="32" rx="2.5"/>' +
@@ -502,14 +539,14 @@
   Locator.prototype.renderPicker = function () {
     var self = this, d = this.data, b = this.brandSel.value, f = this.pickFilter;
     var nc = count(this.selCats), nt = count(this.selTypes), ns = count(this.selStrains), me = this;
-    [[this.tabC, "Type", nc, "cat"], [this.tabP, "Product", nt, "product"], [this.tabS, "Strain", ns, "strain"]].forEach(function (x) {
+    [[this.tabP, "Product", nt, "product"], [this.tabS, "Strain", ns, "strain"]].forEach(function (x) {
       x[0].innerHTML = ""; x[0].appendChild(document.createTextNode(x[1]));
       if (x[2]) x[0].appendChild(el("i", { text: String(x[2]) }));
       x[0].classList.toggle("pl-sel", me.tab === x[3]);
     });
-    this.pf.hidden = this.tab === "cat";
     this.pf.placeholder = this.tab === "product" ? "Find a product" : "Find a strain";
     this.clearBtn.hidden = !(nc || nt || ns);
+    this.renderTypes();
     var closed = this.pick.classList.contains("pl-closed");
     this.toggleBtn.textContent = closed ? "Show options ▾" : "Hide ▴";
     if (closed) return;
