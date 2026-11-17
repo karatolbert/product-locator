@@ -99,7 +99,7 @@
     ".pl-all{background:var(--pl-accent);color:#fff;font-weight:700;font-size:15px;letter-spacing:.02em}",
     ".pl-bar{display:grid;grid-template-columns:1fr 120px;gap:10px;padding:12px 16px 12px}",
     ".pl-pick{border-top:1px solid var(--pl-line);background:#fff;display:grid;grid-template-columns:214px 1fr}",
-    ".pl-pmain{min-width:0}",
+    ".pl-pmain{min-width:0;display:flex;flex-direction:column}",
     ".pl-types{border-right:1px solid var(--pl-line);padding:12px 10px 14px 14px;display:flex;flex-direction:column;gap:2px}",
     ".pl-types-h{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--pl-muted);padding:4px 6px 6px}",
     ".pl-type{display:flex;align-items:center;gap:8px;padding:6px;border-radius:8px;cursor:pointer;font-size:13.5px;color:#1a1a1a;user-select:none}",
@@ -113,7 +113,7 @@
     ".pl-ticn{flex:none;width:24px;height:24px;color:#333}.pl-ticn svg{width:24px;height:24px}",
     ".pl-types-h2{margin-top:10px;border-top:1px solid var(--pl-line);padding-top:14px}",
     ".pl-cdot{flex:none;width:12px;height:12px;border-radius:50%;margin:0 6px}",
-    ".pl-ctag{align-self:center;font-size:10px;font-weight:700;letter-spacing:.03em;color:#fff;border-radius:999px;padding:2px 7px;margin-right:2px;line-height:1.4}",
+    ".pl-ctag{position:absolute;top:6px;left:6px;z-index:1;width:20px;height:20px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.25);color:#fff;font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1}",
     ".pl-ph{display:flex;align-items:center;gap:10px;padding:10px 16px;flex-wrap:wrap}",
     ".pl-tabs{display:inline-flex;background:var(--pl-soft);border:1px solid var(--pl-line);border-radius:999px;padding:3px}",
     ".pl-tab{border:0;background:none;font:inherit;font-size:14px;font-weight:600;color:var(--pl-muted);padding:7px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}",
@@ -122,7 +122,7 @@
     ".pl-pf{flex:1;min-width:160px;max-width:260px;height:36px!important;font-size:14px!important}",
     ".pl-clear{border:0;background:none;font:inherit;font-size:13px;font-weight:600;color:var(--pl-accent);text-decoration:underline;cursor:pointer;padding:4px}",
     ".pl-toggle{margin-left:auto;border:0;background:none;font:inherit;font-size:13px;color:var(--pl-muted);cursor:pointer;padding:4px}",
-    ".pl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px;padding:2px 16px 16px;max-height:292px;overflow-y:auto}",
+    ".pl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));align-content:start;gap:10px;padding:2px 16px 16px;flex:1 1 0;min-height:292px;overflow-y:auto}",
     ".pl-pick.pl-closed .pl-grid,.pl-pick.pl-closed .pl-pf{display:none}",
     ".pl-tile{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 8px 9px;border:1px solid var(--pl-line);border-radius:12px;background:#fff;cursor:pointer;font:inherit;text-align:center;transition:border-color .15s,box-shadow .15s,transform .15s}",
     ".pl-tile:hover{border-color:#cfcfcf;box-shadow:0 3px 10px rgba(0,0,0,.08);transform:translateY(-1px)}",
@@ -204,7 +204,7 @@
     ".pl-tab{font-size:13.5px;padding:7px 11px}",
     ".pl-bar{grid-template-columns:1fr 82px!important}.pl-bar .pl-search{grid-column:auto!important;min-width:0}",
     ".pl-search input{min-width:0}.pl-bar select{padding-right:24px;background-position:calc(100% - 15px) 18px,calc(100% - 10px) 18px}",
-    ".pl-grid{grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:8px;padding:2px 14px 14px;max-height:260px}",
+    ".pl-grid{grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:8px;padding:2px 14px 14px;flex:none;min-height:0;max-height:300px}",
     ".pl-tile .pl-ti{width:68px;height:68px}.pl-ticon svg{width:46px;height:46px}.pl-shopby{display:none}",
     ".pl-bar .pl-prod{grid-column:1/-1;order:2}.pl-bar .pl-var{grid-column:auto;order:3}.pl-bar>select:last-child{order:4}",
     ".pl-go span{display:none}.pl-go svg{display:block!important}",
@@ -591,13 +591,13 @@
     function tile(selected, img, name, sub, onclick, icon, minis, cls) {
       var t = el("button", { type: "button", class: "pl-tile" + (selected ? " pl-sel" : ""), "aria-pressed": String(!!selected), title: name, onclick: onclick }, [
         el("span", { class: "pl-check", html: CHECK }),
+        cls ? el("span", { class: "pl-ctag", text: cls.charAt(0).toUpperCase(), title: cls.charAt(0).toUpperCase() + cls.slice(1),
+          "aria-label": cls, style: "background:" + ((CLASSES.filter(function (c) { return c.key === cls; })[0] || {}).color || "#888") }) : null,
         icon ? el("span", { class: "pl-ti pl-ticon", html: icon })
           : img ? el("img", { class: "pl-ti", src: resolve(img), alt: "", loading: "lazy" }) : el("span", { class: "pl-ti" }),
         el("span", { class: "pl-tn", text: name }),
-        (minis && minis.length) || cls ? el("span", { class: "pl-mini", html:
-          (cls ? '<span class="pl-ctag" style="background:' + ((CLASSES.filter(function (c) { return c.key === cls; })[0] || {}).color || "#888") + '">' +
-            cls.charAt(0).toUpperCase() + cls.slice(1) + "</span>" : "") +
-          (minis || []).map(function (k) { return '<span title="' + k[1] + '">' + ICONS[k[0]] + "</span>"; }).join("") }) : null,
+        minis && minis.length ? el("span", { class: "pl-mini", html:
+          minis.map(function (k) { return '<span title="' + k[1] + '">' + ICONS[k[0]] + "</span>"; }).join("") }) : null,
         sub ? el("span", { class: "pl-tb", text: sub }) : null
       ]);
       var im = t.querySelector("img"); if (im) im.onerror = function () { im.style.visibility = "hidden"; };
