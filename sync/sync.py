@@ -365,6 +365,7 @@ def main():
     excl_lic = [k.lower() for k in cfg["exclude_license_type_keywords"]]
 
     name_over = {str(k).lower(): v for k, v in (cfg.get("name_overrides") or {}).items() if not str(k).startswith("_")}
+    today = dt.date.today().isoformat()
     stores = {}
     skipped = {"customer_excluded": set(), "no_address": set(), "archived": set()}
 
@@ -429,7 +430,9 @@ def main():
                     "products": {}, "last_order": "",
                 }
             s["products"][pid] = max(s["products"].get(pid, ""), when)
-            s["last_order"] = max(s["last_order"], when)
+            # "Recently stocked" only counts orders that have shipped (no future ship dates)
+            if when and when <= today and str(o.get("status", "")).lower() in ("shipped", "complete", "fulfilled"):
+                s["last_order"] = max(s["last_order"], when)
 
     # --- geocode anything missing coordinates (cached between runs)
     cache = load_json(CACHE_PATH, {})

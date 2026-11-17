@@ -157,6 +157,15 @@
     ".pl-feat img{width:96px;height:96px;object-fit:contain;border-radius:10px;background:var(--pl-soft);flex:none}",
     ".pl-feat .pl-ft{font-weight:700;font-size:15px;line-height:1.25}",
     ".pl-feat .pl-fs{font-size:13px;color:var(--pl-muted);margin-top:2px}",
+    ".pl-srow{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--pl-line);padding-right:10px}",
+    ".pl-srow .pl-status{border-bottom:0;flex:1}",
+    ".pl select.pl-sort{width:auto;height:30px;font-size:12.5px;padding:0 26px 0 10px;border-radius:999px;background-position:calc(100% - 14px) 12px,calc(100% - 9px) 12px;flex:none}",
+    ".pl-recent{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;color:#1d7a46;background:#e6f5ec;border-radius:999px;padding:2px 9px 2px 7px;margin:-2px 0 8px}",
+    ".pl-recent svg{width:11px;height:11px}",
+    ".pl-recent-sm{margin:6px 0 0}",
+    ".pl-pop span{display:block;color:var(--pl-muted)}",
+    ".pl-pop-links{display:flex;gap:12px;margin-top:8px;font-weight:600}.pl-pop-links a{color:var(--pl-accent)}",
+    ".pl-view{display:none}",
     ".pl-status{padding:10px 16px;font-size:13px;color:var(--pl-muted);border-bottom:1px solid var(--pl-line)}",
     ".pl-status b{color:#1a1a1a}",".pl-status a{color:var(--pl-accent);font-weight:600}",
     ".pl-list{overflow-y:auto;flex:1;min-height:0}",
@@ -209,8 +218,13 @@
     ".pl-bar .pl-prod{grid-column:1/-1;order:2}.pl-bar .pl-var{grid-column:auto;order:3}.pl-bar>select:last-child{order:4}",
     ".pl-go span{display:none}.pl-go svg{display:block!important}",
     ".pl-search input{padding:0 10px}.pl-search input::placeholder{font-size:13.5px}",
-    ".pl-body{grid-template-columns:1fr;grid-template-rows:300px auto;height:auto}",
-    ".pl-map{order:-1;height:300px}.pl-side{border-right:0}.pl-list{max-height:none}}"
+    ".pl-view{display:flex;gap:4px;margin:10px 14px 0;padding:3px;background:var(--pl-soft);border:1px solid var(--pl-line);border-radius:999px}",
+    ".pl-vbtn{flex:1;border:0;background:none;font:inherit;font-size:14px;font-weight:600;color:var(--pl-muted);padding:8px;border-radius:999px;cursor:pointer}",
+    ".pl-vbtn.pl-sel{background:#fff;color:#1a1a1a;box-shadow:0 1px 3px rgba(0,0,0,.12)}",
+    ".pl-body{grid-template-columns:1fr;grid-template-rows:auto;height:auto;margin-top:10px;border-top:1px solid var(--pl-line)}",
+    ".pl-side{border-right:0}.pl-list{max-height:none}",
+    ".pl.pl-v-list .pl-map{display:none}",
+    ".pl.pl-v-map .pl-side{display:none}.pl.pl-v-map .pl-map{height:72vh;min-height:420px}}"
   ].join("");
 
   var ICON_LOC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/></svg>';
@@ -238,6 +252,23 @@
     d.brands.sort(function (a, b) { return rank(a) - rank(b) || a.localeCompare(b); });
   }
 
+  // ------------------------------------------------------------ tracking
+  // Sends events to Google Analytics 4 (gtag) or Google Tag Manager (dataLayer) if the
+  // page has them, and always fires a "productlocator" DOM event on the widget.
+  function track(root, name, params) {
+    params = params || {};
+    try {
+      if (typeof window.gtag === "function") window.gtag("event", name, params);
+      else if (window.dataLayer && window.dataLayer.push) window.dataLayer.push(Object.assign({ event: name }, params));
+    } catch (e) { /* never let analytics break the locator */ }
+    try { root.dispatchEvent(new CustomEvent("productlocator", { detail: { name: name, params: params }, bubbles: true })); } catch (e) {}
+  }
+
+  function store(k, v) {   // tiny localStorage wrapper (can be blocked)
+    try { if (v === undefined) return JSON.parse(localStorage.getItem("pl-" + k) || "null"); localStorage.setItem("pl-" + k, JSON.stringify(v)); }
+    catch (e) { return null; }
+  }
+
   // ------------------------------------------------------------ widget
   function Locator(root) {
     this.root = root;
@@ -249,7 +280,16 @@
     this.initBrand = params.get("brand") || root.getAttribute("data-brand") || "";
     this.initProduct = params.get("product") || "";
     this.initStrain = params.get("strain") || root.getAttribute("data-strain") || "";
+    this.url = {
+      types: params.getAll("type"), products: params.getAll("product").slice(1), strains: params.getAll("strain").slice(1),
+      kinds: params.getAll("kind"), near: params.get("near") || "", store: params.get("store") || "",
+      radius: params.get("radius") || "", sort: params.get("sort") || "", tab: params.get("tab") || ""
+    };
+    this.recentDays = parseInt(root.getAttribute("data-recent-days"), 10) || 21;
+    this.updateUrl = root.getAttribute("data-update-url") !== "false";
+    this.view = "list";
     this.build();
+    this.setView("list");
     this.load();
   }
 
@@ -287,6 +327,14 @@
 
     this.feat = el("div", { class: "pl-feat", hidden: "" });
     this.status = el("div", { class: "pl-status", "aria-live": "polite", text: "Loading stores…" });
+    this.sortSel = el("select", { class: "pl-sort", "aria-label": "Sort stores", onchange: function () {
+      self.track("locator_sort", { sort: self.sortSel.value }); self.render(false); } });
+    [["near", "Nearest first"], ["recent", "Recently stocked"]].forEach(function (o) { self.sortSel.appendChild(el("option", { value: o[0], text: o[1] })); });
+    this.viewBtns = {};
+    this.viewBar = el("div", { class: "pl-view", role: "tablist", "aria-label": "Show as" }, ["list", "map"].map(function (v) {
+      return (self.viewBtns[v] = el("button", { type: "button", class: "pl-vbtn", text: v === "list" ? "List" : "Map",
+        onclick: function () { self.setView(v); self.track("locator_view", { view: v }); } }));
+    }));
     this.list = el("div", { class: "pl-list" });
     this.mapEl = el("div", { class: "pl-map" });
     this.note = el("div", { class: "pl-note", role: "note", html:
@@ -304,8 +352,9 @@
       this.buildPicker()
     ]));
     r.appendChild(this.note);
+    r.appendChild(this.viewBar);
     r.appendChild(el("div", { class: "pl-body" }, [
-      el("div", { class: "pl-side" }, [this.feat, this.status, this.list]),
+      el("div", { class: "pl-side" }, [this.feat, el("div", { class: "pl-srow" }, [this.status, this.sortSel]), this.list]),
       this.mapEl
     ]));
     r.appendChild(this.foot);
@@ -325,6 +374,7 @@
       self.initMap();
       self.fillBrands();
       self.render(true);
+      self.startNearby();
       var d = new Date(self.data.updated);
       self.foot.textContent = "Based on wholesale orders from the last " + self.data.lookback_days +
         " days. Availability not guaranteed. Updated " +
@@ -348,8 +398,23 @@
     this.map.on("blur", function () { self.map.scrollWheelZoom.disable(); });
   };
 
+  Locator.prototype.isPhone = function () { return window.matchMedia && window.matchMedia("(max-width: 860px)").matches; };
+  Locator.prototype.setView = function (v) {
+    this.view = v;
+    this.root.classList.toggle("pl-v-map", v === "map");
+    this.root.classList.toggle("pl-v-list", v !== "map");
+    this.viewBtns.list.classList.toggle("pl-sel", v !== "map");
+    this.viewBtns.map.classList.toggle("pl-sel", v === "map");
+    var m = this.map;
+    if (m) setTimeout(function () { m.invalidateSize(); }, 30);
+  };
+
+  Locator.prototype.track = function (name, params) { track(this.root, name, params); };
+
   Locator.prototype.pickBrand = function (b) {
-    this.brandSel.value = this.brandSel.value === b ? "" : b;   // click again to clear
+    var on = this.brandSel.value !== b;
+    this.brandSel.value = on ? b : "";   // click again to clear
+    this.track("locator_filter", { filter: "brand", value: b, action: on ? "add" : "remove" });
     this.refresh(); this.render(true);
   };
 
@@ -388,6 +453,21 @@
       var hit = d.products.filter(function (p) { return isStrain(p) && norm(p.variant) === norm(self.initStrain); })[0];
       if (hit) { this.selStrains[norm(hit.variant)] = hit.variant; this.tab = "strain"; }
     }
+    // the rest of a shared link: ?type=aio&product=...&strain=...&kind=indica&near=80202
+    var u = this.url;
+    u.types.forEach(function (k) { if (CATS.some(function (c) { return c.key === k; })) self.selCats[k] = true; });
+    u.kinds.forEach(function (k) { if (CLASSES.some(function (c) { return c.key === k; })) self.selClass[k] = true; });
+    u.products.forEach(function (q) {
+      var t = d.products.filter(function (p) { return norm(p.type) === norm(q); })[0];
+      if (t) self.selTypes[t.brand + "||" + t.type] = true;
+    });
+    u.strains.forEach(function (q) {
+      var t = d.products.filter(function (p) { return isStrain(p) && norm(p.variant) === norm(q); })[0];
+      if (t) self.selStrains[norm(t.variant)] = t.variant;
+    });
+    if (u.radius && this.radiusSel.querySelector('option[value="' + u.radius + '"]')) this.radiusSel.value = u.radius;
+    if (u.sort === "recent") this.sortSel.value = "recent";
+    if (u.tab === "strain" || u.tab === "product") this.tab = u.tab;
     this.refresh();
   };
 
@@ -501,6 +581,7 @@
       var row = el("label", { class: "pl-type" + (on ? " pl-sel" : "") }, [
         el("input", { type: "checkbox", onchange: function () {
           if (self.selCats[o.key]) delete self.selCats[o.key]; else self.selCats[o.key] = true;
+          self.track("locator_filter", { filter: "type", value: o.name, action: self.selCats[o.key] ? "add" : "remove" });
           self.refresh(); self.render(true); } }),
         el("span", { class: "pl-tbox", html: CHECK }),
         el("span", { class: "pl-ticn", html: ICONS[o.key] }),
@@ -522,6 +603,7 @@
       var row = el("label", { class: "pl-type pl-cls" + (on ? " pl-sel" : "") }, [
         el("input", { type: "checkbox", onchange: function () {
           if (self.selClass[c.key]) delete self.selClass[c.key]; else self.selClass[c.key] = true;
+          self.track("locator_filter", { filter: "strain_type", value: c.name, action: self.selClass[c.key] ? "add" : "remove" });
           self.render(true); } }),
         el("span", { class: "pl-tbox", html: CHECK }),
         el("span", { class: "pl-cdot", style: "background:" + c.color }),
@@ -609,6 +691,7 @@
         var nb = Object.keys(bs).length;
         tile(self.selCats[o.key], "", o.name, b ? "" : nb + (nb === 1 ? " brand" : " brands"), function () {
           if (self.selCats[o.key]) delete self.selCats[o.key]; else self.selCats[o.key] = true;
+          self.track("locator_filter", { filter: "type", value: o.name, action: self.selCats[o.key] ? "add" : "remove" });
           self.refresh(); self.render(true);
         }, ICONS[o.key]);
       });
@@ -621,6 +704,7 @@
         var n = o.items.filter(isStrain).length;
         tile(self.selTypes[o.key], img, label, (b ? "" : o.brand) + (n ? (b ? "" : " · ") + n + (n === 1 ? " strain" : " strains") : ""), function () {
           if (self.selTypes[o.key]) delete self.selTypes[o.key]; else self.selTypes[o.key] = true;
+          self.track("locator_filter", { filter: "product", value: o.type, action: self.selTypes[o.key] ? "add" : "remove" });
           self.refresh(); self.render(true);
         });
       });
@@ -640,6 +724,7 @@
         var cls = (o.items.filter(function (p) { return p["class"]; })[0] || {})["class"];
         tile(self.selStrains[o.key], art || logo, o.name, b ? "" : bl.join(", "), function () {
           if (self.selStrains[o.key]) delete self.selStrains[o.key]; else self.selStrains[o.key] = o.name;
+          self.track("locator_filter", { filter: "strain", value: o.name, action: self.selStrains[o.key] ? "add" : "remove" });
           self.refresh(); self.render(true);
         }, "", minis, cls);
       });
@@ -660,23 +745,55 @@
     var isTown = this.data.stores.some(function (s) { return norm(s.city) === nq.replace(/\s+(co|colorado)$/, ""); });
     if (!/^\d{5}$/.test(q.trim()) && !isTown && nq.length >= 3) {
       var hits = this.data.stores.filter(function (s) { return norm(s.name).replace(/[^a-z0-9 ]/g, "").indexOf(nq) >= 0; });
-      if (hits.length) { this.nameQuery = nq; this.origin = null; this.render(true); return; }
+      if (hits.length) {
+        this.nameQuery = nq; this.origin = null; this.render(true);
+        this.track("locator_search", { search_term: q.trim(), search_kind: "store", results: hits.length });
+        return;
+      }
     }
     this.status.textContent = "Finding " + q + "…";
-    geocode(q).then(function (o) { self.origin = o; self.render(true); })
-      .catch(function () { self.status.textContent = "We couldn't find “" + q + "”. Try a 5-digit ZIP code."; });
+    geocode(q).then(function (o) {
+      o.query = q.trim(); self.origin = o; self.autoRadius = true; self.render(true);
+      store("last", { near: o.query });
+      self.track("locator_search", { search_term: o.query, search_kind: /^\d{5}$/.test(o.query) ? "zip" : "city", results: self.lastCount });
+    }).catch(function () {
+      self.status.textContent = "We couldn't find “" + q + "”. Try a 5-digit ZIP code.";
+      self.track("locator_search", { search_term: q.trim(), search_kind: "not_found", results: 0 });
+    });
   };
 
-  Locator.prototype.locate = function () {
+  Locator.prototype.locate = function (quiet) {
     var self = this;
-    if (!navigator.geolocation) { this.status.textContent = "Your browser can't share location. Try a ZIP code."; return; }
-    this.status.textContent = "Finding your location…";
+    if (!navigator.geolocation) { if (!quiet) this.status.textContent = "Your browser can't share location. Try a ZIP code."; return; }
+    if (!quiet) this.status.textContent = "Finding your location…";
+    store("asked", 1);
     navigator.geolocation.getCurrentPosition(function (p) {
       self.origin = { lat: p.coords.latitude, lng: p.coords.longitude, label: "your location" };
-      self.q.value = ""; self.nameQuery = "";
+      self.q.value = ""; self.nameQuery = ""; self.autoRadius = true;
+      store("last", { geo: 1 });
       self.render(true);
-    }, function () { self.status.textContent = "Location wasn't shared. Enter a ZIP code instead."; },
-    { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 });
+      self.track("locator_location", { result: "shared", results: self.lastCount });
+    }, function () {
+      store("last", null);
+      self.render(false);
+      if (!quiet) self.status.textContent = "Location wasn't shared. Enter a ZIP code instead.";
+      self.track("locator_location", { result: "declined" });
+    }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 });
+  };
+
+  // Start sorted by distance: a shared link's ZIP, then the visitor's last ZIP or location,
+  // otherwise ask for location once (first visit only).
+  Locator.prototype.startNearby = function () {
+    var self = this, u = this.url, last = store("last");
+    if (u.store) { this.q.value = u.store; this.search(); return; }
+    if (u.near) { this.q.value = u.near; this.search(); return; }
+    if (last && last.near) { this.q.value = last.near; this.search(); return; }
+    if (last && last.geo) { this.locate(true); return; }
+    if (navigator.permissions && navigator.permissions.query) {
+      navigator.permissions.query({ name: "geolocation" }).then(function (r) {
+        if (r.state === "granted" || (r.state === "prompt" && !store("asked"))) self.locate(true);
+      }).catch(function () { if (!store("asked")) self.locate(true); });
+    } else if (!store("asked")) this.locate(true);
   };
 
   Locator.prototype.render = function (fit) {
@@ -689,14 +806,29 @@
     }).map(function (s) {
       return { s: s, d: o ? miles([o.lat, o.lng], [s.lat, s.lng]) : null };
     });
-    var total = rows.length;
+    var total = rows.length, widened = false;
+    // Nothing nearby? Widen the distance once, after a new search or location.
+    if (o && radius && this.autoRadius && total && !rows.some(function (r) { return r.d <= radius; })) {
+      var steps = ["25", "50", "100", "0"];
+      for (var si = steps.indexOf(String(radius)) + 1; si < steps.length; si++) {
+        var r2 = +steps[si];
+        if (!r2 || rows.some(function (r) { return r.d <= r2; })) { this.radiusSel.value = steps[si]; radius = r2; widened = true; break; }
+      }
+    }
+    this.autoRadius = false;
     if (o && radius) rows = rows.filter(function (r) { return r.d <= radius; });
-    rows.sort(o ? function (a, b) { return a.d - b.d; }
-      : function (a, b) { return (a.s.state + a.s.city + a.s.name).localeCompare(b.s.state + b.s.city + b.s.name); });
+    var now = Date.now(), recentMs = this.recentDays * 864e5;
+    rows.forEach(function (r) { r.age = r.s.last_order ? now - Date.parse(r.s.last_order + "T12:00:00") : Infinity; r.recent = r.age <= recentMs; });
+    var byPlace = function (a, b) { return (a.s.state + a.s.city + a.s.name).localeCompare(b.s.state + b.s.city + b.s.name); };
+    var byDist = function (a, b) { return a.d - b.d; };
+    rows.sort(this.sortSel.value === "recent" ? function (a, b) { return (a.age - b.age) || (o ? byDist(a, b) : byPlace(a, b)); }
+      : o ? byDist : byPlace);
+    this.lastCount = rows.length;
 
     this.renderFeature();
     this.renderRail();
     this.renderPicker();
+    this.writeUrl();
 
     // status line
     var picks = Object.keys(this.selClass).map(function (k) { return k.charAt(0).toUpperCase() + k.slice(1); })
@@ -712,10 +844,10 @@
         el("a", { href: "#", text: "Show all", onclick: function (e) { e.preventDefault(); self.q.value = ""; self.nameQuery = ""; self.render(true); } })]));
     } else if (o) {
       this.status.appendChild(el("span", {}, [el("b", { text: rows.length + (rows.length === 1 ? " store" : " stores") }),
-        " carrying " + what + (radius ? " within " + radius + " mi of " : " near ") + o.label]));
+        " carrying " + what + (radius ? " within " + radius + " mi of " : " near ") + o.label + (widened ? " (nothing closer)" : "")]));
     } else {
       this.status.appendChild(el("span", {}, [el("b", { text: rows.length + (rows.length === 1 ? " store" : " stores") }),
-        " carrying " + what + ". Enter a ZIP to sort by distance."]));
+        " carrying " + what + ". ", el("a", { href: "#", text: "Show stores near me", onclick: function (e) { e.preventDefault(); self.locate(); } })]));
     }
 
     // list
@@ -749,19 +881,30 @@
 
       var full = s.address + ", " + s.city + ", " + s.state + " " + s.zip;
       var dir = "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(s.name + ", " + full);
+      var act = function (what) { return function (e) { e.stopPropagation(); self.track("locator_store_action", { action: what, store_name: s.name, store_city: s.city }); }; };
       var links = el("div", { class: "pl-links" }, [
-        el("a", { href: dir, target: "_blank", rel: "noopener", text: "Directions", onclick: function (e) { e.stopPropagation(); } }),
-        s.phone ? el("a", { href: "tel:" + s.phone.replace(/[^\d+]/g, ""), text: fmtPhone(s.phone), onclick: function (e) { e.stopPropagation(); } }) : null,
-        s.website ? el("a", { href: /^https?:/.test(s.website) ? s.website : "https://" + s.website, target: "_blank", rel: "noopener", text: "Website", onclick: function (e) { e.stopPropagation(); } }) : null
+        el("a", { href: dir, target: "_blank", rel: "noopener", text: "Directions", onclick: act("directions") }),
+        s.phone ? el("a", { href: "tel:" + s.phone.replace(/[^\d+]/g, ""), text: fmtPhone(s.phone), onclick: act("call") }) : null,
+        s.website ? el("a", { href: /^https?:/.test(s.website) ? s.website : "https://" + s.website, target: "_blank", rel: "noopener", text: "Website", onclick: act("website") }) : null
       ]);
+      var lo = s.last_order ? new Date(s.last_order + "T12:00:00") : null;
+      var badge = r.recent ? el("span", { class: "pl-recent", title: "Last order " + lo.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+        html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Recently stocked' }) : null;
       var card = el("div", { class: "pl-card", tabindex: "0", "data-id": s.id }, [
         el("div", { class: "pl-top" }, [el("p", { class: "pl-name", text: s.name }),
           r.d != null ? el("span", { class: "pl-dist", text: r.d.toFixed(r.d < 10 ? 1 : 0) + " mi" }) : null]),
         el("div", { class: "pl-addr", text: full }),
+        badge,
         carried.length ? chips : null,
         links
       ]);
-      card.addEventListener("click", function () { self.focus(s.id, true); });
+      card.addEventListener("click", function () {
+        if (self.isPhone() && self.view !== "map") {
+          self.setView("map");
+          setTimeout(function () { self.map.invalidateSize(); self.focus(s.id, true); }, 80);   // let the map size itself first
+          self.mapEl.scrollIntoView({ block: "start", behavior: "smooth" });
+        } else self.focus(s.id, true);
+      });
       card.addEventListener("keydown", function (e) { if (e.key === "Enter") self.focus(s.id, true); });
       self.list.appendChild(card);
 
@@ -781,12 +924,16 @@
       var m = L.marker([s.lat, s.lng], {
         icon: L.divIcon({ className: "pl-pin-wrap", html: pin, iconSize: [w, 34], iconAnchor: [w / 2, 17], popupAnchor: [0, -16] }),
         title: s.name, riseOnHover: true
-      }).bindPopup('<div class="pl-pop"><b></b><span></span></div>', { minWidth: 200, maxWidth: 260 });
-      m.on("popupopen", function (e) {
-        var c = e.popup.getElement();
-        c.querySelector("b").textContent = s.name;
-        c.querySelector("span").textContent = s.address + ", " + s.city;
-      });
+      }).bindPopup(function () {
+        return el("div", { class: "pl-pop" }, [
+          el("b", { text: s.name }), el("span", { text: s.address + ", " + s.city }),
+          r.recent ? el("div", { class: "pl-recent pl-recent-sm", text: "Recently stocked" }) : null,
+          el("div", { class: "pl-pop-links" }, [
+            el("a", { href: dir, target: "_blank", rel: "noopener", text: "Directions", onclick: act("directions") }),
+            s.phone ? el("a", { href: "tel:" + s.phone.replace(/[^\d+]/g, ""), text: "Call", onclick: act("call") }) : null
+          ])
+        ]);
+      }, { minWidth: 200, maxWidth: 260 });
       m.on("click", function () { self.focus(s.id, false); });
       m.addTo(self.layer);
       self.markers[s.id] = { m: m, card: card };
@@ -864,6 +1011,27 @@
     }
     this.feat.appendChild(el("div", {}, [el("div", { class: "pl-ft", text: title }), sub ? el("div", { class: "pl-fs", text: sub }) : null]));
     this.feat.hidden = false;
+  };
+
+  // Keep the page address in step with the filters, so any view can be shared
+  Locator.prototype.writeUrl = function () {
+    if (!this.updateUrl || !window.history || !history.replaceState) return;
+    try {
+      var self = this, p = new URLSearchParams(location.search);
+      ["brand", "type", "product", "strain", "kind", "near", "store", "radius", "sort", "tab"].forEach(function (k) { p.delete(k); });
+      if (this.brandSel.value) p.set("brand", this.brandSel.value);
+      Object.keys(this.selCats).forEach(function (k) { p.append("type", k); });
+      Object.keys(this.selTypes).forEach(function (k) { p.append("product", k.split("||")[1]); });
+      Object.keys(this.selStrains).forEach(function (k) { p.append("strain", self.selStrains[k]); });
+      Object.keys(this.selClass).forEach(function (k) { p.append("kind", k); });
+      if (this.nameQuery) p.set("store", this.q.value.trim());
+      else if (this.origin && this.origin.query) p.set("near", this.origin.query);
+      if (this.radiusSel.value !== "25") p.set("radius", this.radiusSel.value);
+      if (this.sortSel.value === "recent") p.set("sort", "recent");
+      if (this.tab === "strain") p.set("tab", "strain");
+      var qs = p.toString(), next = location.pathname + (qs ? "?" + qs : "") + location.hash;
+      if (next !== location.pathname + location.search + location.hash) history.replaceState(history.state, "", next);
+    } catch (e) { /* e.g. sandboxed preview */ }
   };
 
   Locator.prototype.focus = function (id, fromList) {
