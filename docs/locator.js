@@ -107,7 +107,8 @@
     ".pl-types-h{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--pl-muted);padding:4px 6px 6px}",
     ".pl-type{display:flex;align-items:center;gap:8px;padding:6px;border-radius:8px;cursor:pointer;font-size:13.5px;color:#1a1a1a;user-select:none}",
     ".pl-type:hover{background:var(--pl-soft)}",
-    ".pl-type input{position:absolute;opacity:0;width:1px;height:1px}",
+    ".pl-type{position:relative}",
+    ".pl-type input{position:absolute;left:0;top:0;opacity:0;width:1px;height:1px;pointer-events:none}",
     ".pl-type input:focus-visible+.pl-tbox{outline:2px solid var(--pl-accent);outline-offset:2px}",
     ".pl-tbox{flex:none;width:18px;height:18px;border-radius:5px;border:1.5px solid #c4c4c4;background:#fff;display:flex;align-items:center;justify-content:center}",
     ".pl-tbox svg{width:12px;height:12px;opacity:0}",
@@ -169,6 +170,7 @@
     ".pl-pop span{display:block;color:var(--pl-muted)}",
     ".pl-pop-links{display:flex;gap:12px;margin-top:8px;font-weight:600}.pl-pop-links a{color:var(--pl-accent)}",
     ".pl-view{display:none}",
+    ".pl-more-btn{display:block;width:calc(100% - 28px);margin:14px;height:44px;border:1px solid var(--pl-line);border-radius:10px;background:#fff;font:inherit;font-size:14px;font-weight:600;color:var(--pl-accent);cursor:pointer}",
     ".pl-status{padding:10px 16px;font-size:13px;color:var(--pl-muted);border-bottom:1px solid var(--pl-line)}",
     ".pl-status b{color:#1a1a1a}",".pl-status a{color:var(--pl-accent);font-weight:600}",
     ".pl-list{overflow-y:auto;flex:1;min-height:0}",
@@ -207,7 +209,8 @@
     ".pl-bar{padding:10px 14px 12px}",
     ".pl-ph{padding:10px 14px;gap:8px}.pl-pf{max-width:none;order:5;flex-basis:100%}",
     ".pl-pick{grid-template-columns:1fr}",
-    ".pl-types{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--pl-line);padding:10px 14px;gap:6px;scrollbar-width:none}",
+    ".pl-types{flex-direction:row;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-x;min-width:0;max-width:100%;border-right:0;border-bottom:1px solid var(--pl-line);padding:10px 14px;gap:6px;scrollbar-width:none}",
+    ".pl-pick>*{min-width:0}",
     ".pl-types::-webkit-scrollbar{display:none}.pl-types-h{display:none}",
     ".pl-type{flex:none;border:1px solid var(--pl-line);border-radius:999px;padding:5px 11px 5px 7px;font-size:13px}",
     ".pl-type .pl-tbox{display:none}.pl-type.pl-sel{background:var(--pl-accent);border-color:var(--pl-accent);color:#fff}.pl-type.pl-sel .pl-ticn{color:#fff}",
@@ -886,6 +889,8 @@
     }
 
     var b = this.brandSel.value, nT = count(this.selTypes), nS = count(this.selStrains);
+    var pageSize = this.isPhone() ? 8 : 0, shown = 0;   // phones: 8 at a time
+    this.pending = [];
     rows.forEach(function (r) {
       var s = r.s;
       var carried = s.products.map(function (x) { return self.prodById[x]; }).filter(function (p) {
@@ -930,7 +935,7 @@
         } else self.focus(s.id, true);
       });
       card.addEventListener("keydown", function (e) { if (e.key === "Enter") self.focus(s.id, true); });
-      self.list.appendChild(card);
+      if (!pageSize || shown < pageSize) { self.list.appendChild(card); shown++; } else self.pending.push(card);
 
       // one logo per brand the store carries (most-carried first, up to 3)
       var counts = {};
@@ -963,6 +968,8 @@
       self.markers[s.id] = { m: m, card: card };
     });
 
+    this.addMoreButton();
+
     if (o) {
       L.circleMarker([o.lat, o.lng], { radius: 6, weight: 3, color: "#2b7bff", fillColor: "#fff", fillOpacity: 1 }).addTo(this.layer);
     }
@@ -975,6 +982,23 @@
       else if (o) this.map.setView([o.lat, o.lng], 10);
     }
     setTimeout(function () { self.map.invalidateSize(); }, 50);
+  };
+
+  Locator.prototype.addMoreButton = function () {
+    var self = this;
+    if (this.moreBtn) this.moreBtn.remove();
+    this.moreBtn = null;
+    if (!this.pending.length) return;
+    var n = Math.min(8, this.pending.length);
+    this.moreBtn = el("button", { type: "button", class: "pl-more-btn",
+      text: "Show " + n + " more " + (n === 1 ? "store" : "stores") + " (" + this.pending.length + " left)",
+      onclick: function () { self.showMore(8); self.track("locator_show_more", { shown: self.list.querySelectorAll(".pl-card").length }); } });
+    this.list.appendChild(this.moreBtn);
+  };
+  Locator.prototype.showMore = function (n, untilCard) {
+    if (this.moreBtn) this.moreBtn.remove();
+    while (this.pending.length && (n-- > 0 || (untilCard && !untilCard.isConnected))) this.list.appendChild(this.pending.shift());
+    this.addMoreButton();
   };
 
   function pinEl(m) { var e = m.getElement && m.getElement(); return e && e.querySelector(".pl-pin"); }
@@ -1068,6 +1092,7 @@
     if (pinEl(x.m)) pinEl(x.m).classList.add("pl-on");
     x.m.setZIndexOffset(1000);
     if (prev && prev !== x) prev.m.setZIndexOffset(0);
+    if (!x.card.isConnected) this.showMore(0, x.card);
     if (fromList) {
       this.map.setView(x.m.getLatLng(), Math.max(this.map.getZoom(), 13));
       x.m.openPopup();
