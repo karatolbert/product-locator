@@ -84,7 +84,20 @@
     ".pl{--pl-accent:#1a1a1a;--pl-line:#e3e3e3;--pl-muted:#6b6b6b;--pl-bg:#fff;--pl-soft:#f6f6f4;",
     "font-family:inherit;color:#1a1a1a;background:var(--pl-bg);border:1px solid var(--pl-line);border-radius:14px;overflow:hidden;line-height:1.4;font-size:15px;text-align:left}",
     ".pl *{box-sizing:border-box}",
-    ".pl-bar{display:grid;grid-template-columns:minmax(370px,2.3fr) .8fr 1.4fr 1fr 96px;gap:10px;padding:14px;border-bottom:1px solid var(--pl-line);background:var(--pl-soft)}",
+    ".pl-head{background:var(--pl-soft);border-bottom:1px solid var(--pl-line)}",
+    ".pl-rail{display:flex;gap:18px;padding:16px 16px 4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}",
+    ".pl-rail::-webkit-scrollbar{display:none}",
+    ".pl-logo{flex:none;display:flex;flex-direction:column;align-items:center;gap:7px;background:none;border:0;padding:4px 2px;margin:0;cursor:pointer;font:inherit;font-size:12px;letter-spacing:.01em;color:var(--pl-muted);-webkit-tap-highlight-color:transparent}",
+    ".pl-lc{width:60px;height:60px;border-radius:50%;overflow:hidden;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.08);transition:transform .18s,box-shadow .18s,opacity .18s,filter .18s;display:flex;align-items:center;justify-content:center}",
+    ".pl-lc img{width:100%;height:100%;object-fit:cover;display:block}",
+    ".pl-logo:hover .pl-lc{transform:translateY(-2px);box-shadow:0 0 0 1px rgba(0,0,0,.08),0 6px 14px rgba(0,0,0,.14)}",
+    ".pl-logo:focus-visible{outline:none}.pl-logo:focus-visible .pl-lc{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--pl-accent)}",
+    ".pl-logo.pl-sel .pl-lc{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--pl-accent),0 6px 14px rgba(0,0,0,.14)}",
+    ".pl-logo.pl-sel span{color:#1a1a1a;font-weight:700}",
+    ".pl-rail.pl-has-sel .pl-logo:not(.pl-sel) .pl-lc{opacity:.5;filter:grayscale(.7)}",
+    ".pl-rail.pl-has-sel .pl-logo:not(.pl-sel):hover .pl-lc{opacity:.9;filter:none}",
+    ".pl-all{background:var(--pl-accent);color:#fff;font-weight:700;font-size:15px;letter-spacing:.02em}",
+    ".pl-bar{display:grid;grid-template-columns:minmax(320px,2.2fr) 1.5fr 1fr 96px;gap:10px;padding:12px 16px 16px}",
     ".pl-search{display:flex;gap:6px}",
     ".pl input,.pl select{width:100%;height:42px;border:1px solid var(--pl-line);border-radius:9px;padding:0 12px;font:inherit;font-size:15px;background:#fff;color:inherit;margin:0;-webkit-appearance:none;appearance:none}",
     ".pl select:disabled{opacity:.5;cursor:not-allowed}.pl select{background-image:linear-gradient(45deg,transparent 50%,#888 50%),linear-gradient(135deg,#888 50%,transparent 50%);background-position:calc(100% - 17px) 18px,calc(100% - 12px) 18px;background-size:5px 5px;background-repeat:no-repeat;padding-right:30px;text-overflow:ellipsis}",
@@ -135,7 +148,10 @@
     ".pl .leaflet-popup-content{font-family:inherit;font-size:14px;margin:12px 14px}",
     ".pl-pop b{display:block;font-size:15px;margin-bottom:2px}",
     "@media (max-width:860px){.pl-bar{grid-template-columns:1fr 104px}.pl-search{grid-column:1/-1}",
-    ".pl-bar .pl-prod,.pl-bar .pl-var{grid-column:1/-1;order:3}",
+    ".pl-rail{gap:12px;padding:14px 14px 2px;-webkit-mask-image:linear-gradient(90deg,#000 85%,transparent);mask-image:linear-gradient(90deg,#000 85%,transparent)}",
+    ".pl-lc{width:52px;height:52px}.pl-logo{font-size:11px}",
+    ".pl-bar{padding:10px 14px 14px}",
+    ".pl-bar .pl-prod{grid-column:1/-1;order:2}.pl-bar .pl-var{grid-column:auto;order:3}.pl-bar>select:last-child{order:4}",
     ".pl-go span{display:none}.pl-go svg{display:block!important}",
     ".pl-search input{padding:0 10px}.pl-search input::placeholder{font-size:13.5px}",
     ".pl-body{grid-template-columns:1fr;grid-template-rows:300px auto;height:auto}",
@@ -143,6 +159,29 @@
   ].join("");
 
   var ICON_LOC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/></svg>';
+
+  // Oil Twists is its own line on the website, though LeafLink files it under Oil.
+  function splitTwists(d) {
+    var any = false;
+    d.products.forEach(function (p) {
+      if (p.brand === "Oil" && /^Oil Twists/i.test(p.type)) { p.brand = "Oil Twists"; any = true; }
+    });
+    if (!any) return;
+    var i = d.brands.indexOf("Oil");
+    if (d.brands.indexOf("Oil Twists") < 0) d.brands.splice(i < 0 ? d.brands.length : i + 1, 0, "Oil Twists");
+    d.brand_images = d.brand_images || {};
+    if (!d.brand_images["Oil Twists"]) d.brand_images["Oil Twists"] = "img/brands/oil-twists.jpg";
+    d.strain_images = d.strain_images || {};
+    if (!d.strain_images["Oil Twists"]) d.strain_images["Oil Twists"] = d.strain_images["Oil"] || {};
+  }
+
+  // Brand order on the logo row (others follow alphabetically). data-brand-order="Oil, Sesh, ..." overrides.
+  var BRAND_ORDER = ["Oil", "Oil Twists", "Sesh", "Panacea", "Wisenheimer", "Boost!"];
+  function orderBrands(d, custom) {
+    var order = custom ? custom.split(",").map(function (x) { return x.trim(); }) : BRAND_ORDER;
+    var rank = function (b) { var i = order.indexOf(b); return i < 0 ? 999 : i; };
+    d.brands.sort(function (a, b) { return rank(a) - rank(b) || a.localeCompare(b); });
+  }
 
   // ------------------------------------------------------------ widget
   function Locator(root) {
@@ -178,7 +217,7 @@
       html: '<span>Search</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>' });
     var me = el("button", { class: "pl-btn pl-ghost", type: "button", title: "Use my location", "aria-label": "Use my location",
       html: ICON_LOC, onclick: function () { self.locate(); } });
-    this.brandSel = el("select", { "aria-label": "Brand", onchange: function () { self.refresh(); self.render(true); } });
+    this.brandSel = el("select", { "aria-hidden": "true", tabindex: "-1", style: "display:none" });
     this.prodSel = el("select", { "aria-label": "Product", class: "pl-prod", onchange: function () { self.refresh(); self.render(true); } });
     this.varSel = el("select", { "aria-label": "Strain", class: "pl-var", onchange: function () { self.refresh(); self.render(true); } });
     this.radiusSel = el("select", { "aria-label": "Distance", onchange: function () { self.render(true); } });
@@ -196,9 +235,13 @@
       '<span><b>Please call the store before you go.</b> This map shows shops that recently ordered our products. It is not a live inventory, so items may have sold out.</span>' });
     this.foot = el("div", { class: "pl-foot" });
 
-    r.appendChild(el("div", { class: "pl-bar" }, [
-      el("div", { class: "pl-search" }, [this.q, go, me]),
-      this.brandSel, this.prodSel, this.varSel, this.radiusSel
+    this.rail = el("div", { class: "pl-rail", role: "group", "aria-label": "Filter by brand" });
+    r.appendChild(el("div", { class: "pl-head" }, [
+      this.rail,
+      el("div", { class: "pl-bar" }, [
+        el("div", { class: "pl-search" }, [this.q, go, me]),
+        this.prodSel, this.varSel, this.radiusSel
+      ])
     ]));
     r.appendChild(this.note);
     r.appendChild(el("div", { class: "pl-body" }, [
@@ -215,6 +258,8 @@
       loadJS(LEAFLET_JS)
     ]).then(function (res) {
       self.data = res[0];
+      splitTwists(self.data);
+      orderBrands(self.data, self.root.getAttribute("data-brand-order"));
       self.prodById = {};
       self.data.products.forEach(function (p) { self.prodById[p.id] = p; });
       self.initMap();
@@ -241,6 +286,28 @@
     var self = this;
     this.map.on("focus", function () { self.map.scrollWheelZoom.enable(); });
     this.map.on("blur", function () { self.map.scrollWheelZoom.disable(); });
+  };
+
+  Locator.prototype.pickBrand = function (b) {
+    this.brandSel.value = this.brandSel.value === b ? "" : b;   // click again to clear
+    this.refresh(); this.render(true);
+  };
+
+  Locator.prototype.renderRail = function () {
+    var self = this, cur = this.brandSel.value, imgs = this.data.brand_images || {};
+    this.rail.innerHTML = "";
+    this.rail.classList.toggle("pl-has-sel", !!cur);
+    var all = el("button", { type: "button", class: "pl-logo" + (cur ? "" : " pl-sel"), "aria-pressed": String(!cur),
+      onclick: function () { self.brandSel.value = ""; self.refresh(); self.render(true); } },
+      [el("div", { class: "pl-lc pl-all", text: "All" }), el("span", { text: "All brands" })]);
+    this.rail.appendChild(all);
+    this.data.brands.forEach(function (b) {
+      var src = imgs[b] || "";
+      if (src && !/^(https?:|data:)/.test(src)) src = scriptBase + src;
+      var lc = el("div", { class: "pl-lc" }, [src ? el("img", { src: src, alt: "" }) : el("b", { text: b.charAt(0) })]);
+      self.rail.appendChild(el("button", { type: "button", class: "pl-logo" + (cur === b ? " pl-sel" : ""), "aria-pressed": String(cur === b),
+        title: b, onclick: function () { self.pickBrand(b); } }, [lc, el("span", { text: b })]));
+    });
   };
 
   Locator.prototype.fillBrands = function () {
@@ -374,6 +441,7 @@
       : function (a, b) { return (a.s.state + a.s.city + a.s.name).localeCompare(b.s.state + b.s.city + b.s.name); });
 
     this.renderFeature();
+    this.renderRail();
 
     // status line
     var vt = this.varSel.value ? this.varSel.options[this.varSel.selectedIndex].text : "";

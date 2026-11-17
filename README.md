@@ -24,6 +24,11 @@ Optional attributes on the `<div>`:
 Links can also preselect filters, which is handy for Instagram bios and posts:
 `yoursite.com/find-us?brand=Sesh` or `?brand=Oil&product=Classic%20Cart%201g`
 
+## Versions
+
+- `docs/locator.js` is the live widget (v2: brand-logo row, Oil Twists as its own brand).
+- `docs/locator-v1.js` is the earlier dropdown version, kept as a backup. To go back, point the embed's script at `locator-v1.js`.
+
 ## Settings (`config.json`)
 
 | Setting | What it does |
