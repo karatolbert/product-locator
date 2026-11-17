@@ -118,6 +118,12 @@
     ".pl-check{position:absolute;top:7px;right:7px;width:20px;height:20px;border-radius:6px;border:1.5px solid #c9c9c9;background:#fff;display:flex;align-items:center;justify-content:center}",
     ".pl-tile.pl-sel .pl-check{background:var(--pl-accent);border-color:var(--pl-accent)}",
     ".pl-check svg{width:13px;height:13px;opacity:0}.pl-tile.pl-sel .pl-check svg{opacity:1}",
+    ".pl-shopby{font-size:13px;font-weight:600;color:var(--pl-muted)}",
+    ".pl-ticon{display:flex;align-items:center;justify-content:center;border-radius:50%!important;color:#1a1a1a}",
+    ".pl-ticon svg{width:56px;height:56px}",
+    ".pl-tile.pl-sel .pl-ticon{background:var(--pl-accent);color:#fff}",
+    ".pl-mini{display:flex;gap:4px;justify-content:center;color:#4a4a4a;margin-top:-1px}",
+    ".pl-mini svg{width:21px;height:21px;stroke-width:3.2}",
     ".pl-gempty{grid-column:1/-1;color:var(--pl-muted);font-size:14px;padding:14px 4px}",
     ".pl-search{display:flex;gap:6px}",
     ".pl input,.pl select{width:100%;height:42px;border:1px solid var(--pl-line);border-radius:9px;padding:0 12px;font:inherit;font-size:15px;background:#fff;color:inherit;margin:0;-webkit-appearance:none;appearance:none}",
@@ -177,7 +183,7 @@
     ".pl-bar{grid-template-columns:1fr 82px!important}.pl-bar .pl-search{grid-column:auto!important;min-width:0}",
     ".pl-search input{min-width:0}.pl-bar select{padding-right:24px;background-position:calc(100% - 15px) 18px,calc(100% - 10px) 18px}",
     ".pl-grid{grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:8px;padding:2px 14px 14px;max-height:260px}",
-    ".pl-tile .pl-ti{width:68px;height:68px}",
+    ".pl-tile .pl-ti{width:68px;height:68px}.pl-ticon svg{width:46px;height:46px}.pl-shopby{display:none}",
     ".pl-bar .pl-prod{grid-column:1/-1;order:2}.pl-bar .pl-var{grid-column:auto;order:3}.pl-bar>select:last-child{order:4}",
     ".pl-go span{display:none}.pl-go svg{display:block!important}",
     ".pl-search input{padding:0 10px}.pl-search input::placeholder{font-size:13.5px}",
@@ -245,9 +251,10 @@
     var me = el("button", { class: "pl-btn pl-ghost", type: "button", title: "Use my location", "aria-label": "Use my location",
       html: ICON_LOC, onclick: function () { self.locate(); } });
     this.brandSel = el("select", { "aria-hidden": "true", tabindex: "-1", style: "display:none" });
+    this.selCats = {};       // "cart" / "aio" / ... -> true
     this.selTypes = {};      // "Brand||Type" -> true
     this.selStrains = {};    // normalised strain -> display name
-    this.tab = "product";
+    this.tab = "cat";
     this.pickFilter = "";
     this.radiusSel = el("select", { "aria-label": "Distance", onchange: function () { self.render(true); } });
     [["10", "10 mi"], ["25", "25 mi"], ["50", "50 mi"], ["100", "100 mi"], ["0", "Any distance"]].forEach(function (o) {
@@ -374,11 +381,23 @@
       if (b && p.brand !== b) return;
       var k = p.brand + "||" + p.type;
       if (count(ss) && !(isStrain(p) && ss[norm(p.variant)]) && !self.selTypes[k]) return;
+      if (count(self.selCats) && !inCats(p, self.selCats) && !self.selTypes[k]) return;
       if (!out[k]) { out[k] = { key: k, brand: p.brand, type: p.type, items: [] }; order.push(k); }
       out[k].items.push(p);
     });
     return order.map(function (k) { return out[k]; });
   };
+  Locator.prototype.catOptions = function () {
+    var b = this.brandSel.value, ss = this.selStrains, self = this, found = {};
+    this.data.products.forEach(function (p) {
+      if (b && p.brand !== b) return;
+      if (count(ss) && !(isStrain(p) && ss[norm(p.variant)])) return;
+      catsOf(p.type).forEach(function (k) { (found[k] = found[k] || []).push(p); });
+    });
+    return CATS.filter(function (c) { return found[c.key] || self.selCats[c.key]; })
+      .map(function (c) { return { key: c.key, name: c.name, items: found[c.key] || [] }; });
+  };
+
   Locator.prototype.strainOptions = function () {
     var self = this, b = this.brandSel.value, st = this.selTypes, out = {}, order = [];
     this.data.products.forEach(function (p) {
@@ -386,6 +405,7 @@
       if (b && p.brand !== b) return;
       var k = norm(p.variant);
       if (count(st) && !st[p.brand + "||" + p.type] && !self.selStrains[k]) return;
+      if (count(self.selCats) && !inCats(p, self.selCats) && !self.selStrains[k]) return;
       if (!out[k]) { out[k] = { key: k, name: p.variant, items: [] }; order.push(k); }
       out[k].items.push(p);
     });
@@ -397,6 +417,9 @@
   Locator.prototype.refresh = function () {
     var self = this, b = this.brandSel.value;
     if (!b) return;
+    var cats = {};
+    this.data.products.forEach(function (p) { if (p.brand === b) catsOf(p.type).forEach(function (k) { cats[k] = 1; }); });
+    Object.keys(this.selCats).forEach(function (k) { if (!cats[k]) delete self.selCats[k]; });
     Object.keys(this.selTypes).forEach(function (k) { if (k.split("||")[0] !== b) delete self.selTypes[k]; });
     var inBrand = {};
     this.data.products.forEach(function (p) { if (p.brand === b && isStrain(p)) inBrand[norm(p.variant)] = 1; });
@@ -404,11 +427,12 @@
   };
 
   Locator.prototype.wanted = function () {
-    var b = this.brandSel.value, st = this.selTypes, ss = this.selStrains;
-    if (!b && !count(st) && !count(ss)) return null;
+    var b = this.brandSel.value, sc = this.selCats, st = this.selTypes, ss = this.selStrains;
+    if (!b && !count(sc) && !count(st) && !count(ss)) return null;
     var ok = {};
     this.data.products.forEach(function (p) {
       if (b && p.brand !== b) return;
+      if (count(sc) && !inCats(p, sc)) return;
       if (count(st) && !st[p.brand + "||" + p.type]) return;
       if (count(ss) && !(isStrain(p) && ss[norm(p.variant)])) return;
       ok[p.id] = 1;
@@ -419,51 +443,100 @@
   Locator.prototype.buildPicker = function () {
     var self = this;
     this.pick = el("div", { class: "pl-pick" });
-    this.tabP = el("button", { type: "button", class: "pl-tab", onclick: function () { self.tab = "product"; self.pickFilter = ""; self.pf.value = ""; self.open(); self.renderPicker(); } });
-    this.tabS = el("button", { type: "button", class: "pl-tab", onclick: function () { self.tab = "strain"; self.pickFilter = ""; self.pf.value = ""; self.open(); self.renderPicker(); } });
+    function go(t) { return function () { self.tab = t; self.pickFilter = ""; self.pf.value = ""; self.open(); self.renderPicker(); }; }
+    this.tabC = el("button", { type: "button", class: "pl-tab", onclick: go("cat") });
+    this.tabP = el("button", { type: "button", class: "pl-tab", onclick: go("product") });
+    this.tabS = el("button", { type: "button", class: "pl-tab", onclick: go("strain") });
     this.pf = el("input", { type: "search", class: "pl-pf", placeholder: "Find a product",
       oninput: function () { self.pickFilter = norm(self.pf.value); self.renderPicker(); } });
     this.clearBtn = el("button", { type: "button", class: "pl-clear", text: "Clear picks",
-      onclick: function () { self.selTypes = {}; self.selStrains = {}; self.render(true); } });
+      onclick: function () { self.selCats = {}; self.selTypes = {}; self.selStrains = {}; self.render(true); } });
     this.toggleBtn = el("button", { type: "button", class: "pl-toggle", onclick: function () {
       self.pick.classList.toggle("pl-closed"); self.renderPicker(); } });
     this.grid = el("div", { class: "pl-grid", role: "group" });
     this.pick.appendChild(el("div", { class: "pl-ph" }, [
-      el("div", { class: "pl-tabs", role: "tablist" }, [this.tabP, this.tabS]), this.pf, this.clearBtn, this.toggleBtn]));
+      el("span", { class: "pl-shopby", text: "Shop by" }),
+      el("div", { class: "pl-tabs", role: "tablist" }, [this.tabC, this.tabP, this.tabS]), this.pf, this.clearBtn, this.toggleBtn]));
     this.pick.appendChild(this.grid);
     return this.pick;
   };
   Locator.prototype.open = function () { this.pick.classList.remove("pl-closed"); };
 
+  // Simple line icons for each kind of device (64x64, stroke = currentColor)
+  function svg(body) {
+    return '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">' + body + "</svg>";
+  }
+  var ICONS = {
+    cart: svg('<rect x="27" y="5" width="10" height="9" rx="2"/><rect x="23" y="14" width="18" height="30" rx="3.5"/>' +
+      '<rect x="26" y="29" width="12" height="12" rx="1.5" fill="currentColor" opacity=".22" stroke="none"/><path d="M26 29h12"/>' +
+      '<path d="M26 44v12h12V44"/><path d="M26 49h12M26 52.5h12"/>'),
+    aio: svg('<path d="M27 5h10l2 9H25z"/><rect x="19" y="14" width="26" height="45" rx="7"/>' +
+      '<rect x="26.5" y="22" width="11" height="17" rx="3.5"/><rect x="28.5" y="30" width="7" height="7" rx="1.5" fill="currentColor" opacity=".22" stroke="none"/>' +
+      '<circle cx="32" cy="49" r="2.4"/>'),
+    pack: svg('<rect x="8" y="16" width="48" height="40" rx="5"/><path d="M8 24h48"/>' +
+      '<rect x="14" y="30" width="6" height="18" rx="2"/><rect x="24" y="30" width="6" height="18" rx="2"/>' +
+      '<rect x="34" y="30" width="6" height="18" rx="2"/><rect x="44" y="30" width="6" height="18" rx="2"/><path d="M22 10h20"/>'),
+    preroll: svg('<path d="M27.5 46 20 9h24l-7.5 37"/><path d="M20 9c3.5-3.5 20.5-3.5 24 0"/><rect x="27" y="46" width="10" height="12" rx="2"/>' +
+      '<path d="M27 50.5h10"/><path d="M25 22c4 1.5 10 1.5 14 0M26.5 31c3 1.2 8 1.2 11 0" opacity=".55"/>'),
+    battery: svg('<path d="M28 9V4h8v5"/><rect x="25" y="9" width="14" height="50" rx="5"/><circle cx="32" cy="21" r="3"/>' +
+      '<path d="M29 48h6M29 52h6" opacity=".7"/>'),
+    syringe: svg('<path d="M23 5h18M32 5v10"/><rect x="25" y="15" width="14" height="32" rx="2.5"/>' +
+      '<rect x="27.5" y="31" width="9" height="13.5" rx="1" fill="currentColor" opacity=".22" stroke="none"/>' +
+      '<path d="M25 22h6M25 28h6M25 34h6M25 40h6"/><path d="M29.5 47v5h5v-5M32 52v8"/>')
+  };
+  // "Shop by type" groups. A product can sit in more than one (a cone variety pack is a pack and a pre-roll).
+  var CATS = [
+    { key: "cart", name: "Cartridges", test: function (t) { return /cartridge/i.test(t) && !/variety|pack/i.test(t); } },
+    { key: "aio", name: "All-in-ones", test: function (t) { return /all.?in.?one|seshie/i.test(t); } },
+    { key: "pack", name: "Variety packs", test: function (t) { return /variety|\bpack\b/i.test(t); } },
+    { key: "preroll", name: "Infused pre-rolls", test: function (t) { return /cone|pre-?roll/i.test(t); } },
+    { key: "battery", name: "Batteries", test: function (t) { return /battery/i.test(t); } },
+    { key: "syringe", name: "Syringes", test: function (t) { return /syringe/i.test(t); } }
+  ];
+  function catsOf(type) { return CATS.filter(function (c) { return c.test(type); }).map(function (c) { return c.key; }); }
+  function inCats(p, sel) { return catsOf(p.type).some(function (k) { return sel[k]; }); }
+  function iconFor(type) { var k = catsOf(type)[0]; return k ? ICONS[k] : ""; }
+
   var CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 
   Locator.prototype.renderPicker = function () {
     var self = this, d = this.data, b = this.brandSel.value, f = this.pickFilter;
-    var nt = count(this.selTypes), ns = count(this.selStrains);
-    this.tabP.innerHTML = ""; this.tabP.appendChild(document.createTextNode("Shop by product"));
-    if (nt) this.tabP.appendChild(el("i", { text: String(nt) }));
-    this.tabS.innerHTML = ""; this.tabS.appendChild(document.createTextNode("Shop by strain"));
-    if (ns) this.tabS.appendChild(el("i", { text: String(ns) }));
-    this.tabP.classList.toggle("pl-sel", this.tab === "product");
-    this.tabS.classList.toggle("pl-sel", this.tab === "strain");
+    var nc = count(this.selCats), nt = count(this.selTypes), ns = count(this.selStrains), me = this;
+    [[this.tabC, "Type", nc, "cat"], [this.tabP, "Product", nt, "product"], [this.tabS, "Strain", ns, "strain"]].forEach(function (x) {
+      x[0].innerHTML = ""; x[0].appendChild(document.createTextNode(x[1]));
+      if (x[2]) x[0].appendChild(el("i", { text: String(x[2]) }));
+      x[0].classList.toggle("pl-sel", me.tab === x[3]);
+    });
+    this.pf.hidden = this.tab === "cat";
     this.pf.placeholder = this.tab === "product" ? "Find a product" : "Find a strain";
-    this.clearBtn.hidden = !(nt || ns);
+    this.clearBtn.hidden = !(nc || nt || ns);
     var closed = this.pick.classList.contains("pl-closed");
     this.toggleBtn.textContent = closed ? "Show options ▾" : "Hide ▴";
     if (closed) return;
 
     var grid = this.grid; grid.innerHTML = "";
-    function tile(selected, img, name, sub, onclick) {
+    function tile(selected, img, name, sub, onclick, icon, minis) {
       var t = el("button", { type: "button", class: "pl-tile" + (selected ? " pl-sel" : ""), "aria-pressed": String(!!selected), title: name, onclick: onclick }, [
         el("span", { class: "pl-check", html: CHECK }),
-        img ? el("img", { class: "pl-ti", src: resolve(img), alt: "", loading: "lazy" }) : el("span", { class: "pl-ti" }),
+        icon ? el("span", { class: "pl-ti pl-ticon", html: icon })
+          : img ? el("img", { class: "pl-ti", src: resolve(img), alt: "", loading: "lazy" }) : el("span", { class: "pl-ti" }),
         el("span", { class: "pl-tn", text: name }),
+        minis && minis.length ? el("span", { class: "pl-mini", html: minis.map(function (k) { return '<span title="' + k[1] + '">' + ICONS[k[0]] + "</span>"; }).join("") }) : null,
         sub ? el("span", { class: "pl-tb", text: sub }) : null
       ]);
       var im = t.querySelector("img"); if (im) im.onerror = function () { im.style.visibility = "hidden"; };
       grid.appendChild(t);
     }
-    if (this.tab === "product") {
+    if (this.tab === "cat") {
+      this.catOptions().forEach(function (o) {
+        var bs = {}; o.items.forEach(function (p) { bs[p.brand] = 1; });
+        var nb = Object.keys(bs).length;
+        tile(self.selCats[o.key], "", o.name, b ? "" : nb + (nb === 1 ? " brand" : " brands"), function () {
+          if (self.selCats[o.key]) delete self.selCats[o.key]; else self.selCats[o.key] = true;
+          self.refresh(); self.render(true);
+        }, ICONS[o.key]);
+      });
+    } else if (this.tab === "product") {
       var opts = this.typeOptions().filter(function (o) { return !f || norm(o.type).indexOf(f) >= 0; });
       opts.forEach(function (o) {
         var withImg = o.items.filter(function (p) { return p.image; })[0];
@@ -482,14 +555,16 @@
       sopts.forEach(function (o) {
         var art = "";
         o.items.some(function (p) { var m = si[p.brand] || {}; for (var k in m) if (norm(k) === o.key) { art = m[k]; return true; } return false; });
-        var withImg = o.items.filter(function (p) { return p.image; })[0];
         var brands = {}; o.items.forEach(function (p) { brands[p.brand] = 1; });
         var bl = Object.keys(brands);
-        tile(self.selStrains[o.key], art || (withImg ? withImg.image : ""), o.name,
-          (b ? "" : bl.join(", ") + " · ") + o.items.length + (o.items.length === 1 ? " product" : " products"), function () {
+        var logo = (d.brand_images || {})[b || bl[0]] || "";
+        var kinds = {}, minis = [];
+        o.items.forEach(function (p) { var k = catsOf(p.type).filter(function (x) { return x !== "pack"; })[0] || catsOf(p.type)[0];
+          if (k && !kinds[k]) { kinds[k] = 1; minis.push([k, CATS.filter(function (c) { return c.key === k; })[0].name]); } });
+        tile(self.selStrains[o.key], art || logo, o.name, b ? "" : bl.join(", "), function () {
           if (self.selStrains[o.key]) delete self.selStrains[o.key]; else self.selStrains[o.key] = o.name;
           self.refresh(); self.render(true);
-        });
+        }, "", minis);
       });
       if (!sopts.length) grid.appendChild(el("div", { class: "pl-gempty", text: "No strains match." }));
     }
@@ -547,8 +622,9 @@
     this.renderPicker();
 
     // status line
-    var picks = Object.keys(this.selTypes).map(function (k) { return k.split("||")[1]; })
-      .concat(Object.keys(this.selStrains).map(function (k) { return self.selStrains[k]; }));
+    var picks = Object.keys(this.selCats).map(function (k) { return CATS.filter(function (c) { return c.key === k; })[0].name.toLowerCase(); })
+      .concat(Object.keys(this.selTypes).map(function (k) { return k.split("||")[1]; })
+      .concat(Object.keys(this.selStrains).map(function (k) { return self.selStrains[k]; })));
     var what = picks.length ? picks.slice(0, 2).join(" + ") + (picks.length > 2 ? " + " + (picks.length - 2) + " more" : "")
       : (this.brandSel.value || "our products");
     this.status.innerHTML = "";
@@ -658,7 +734,7 @@
   Locator.prototype.renderFeature = function () {
     var d = this.data, b = this.brandSel.value;
     var tk = Object.keys(this.selTypes), sk = Object.keys(this.selStrains);
-    if (tk.length > 1 || sk.length > 1) { this.feat.hidden = true; return; }   // tiles already show the picks
+    if (tk.length > 1 || sk.length > 1 || count(this.selCats)) { this.feat.hidden = true; return; }   // tiles already show the picks
     var t = tk[0] || "", v = sk[0] || "";
     var ok = this.wanted(), ps = ok ? d.products.filter(function (p) { return ok[p.id]; }) : [];
     var img = "", title = "", sub = "", imgs = null;
