@@ -139,5 +139,6 @@
     "Wisenheimer Tugboat All In One (1g)": "Wisenheimer Live Rosin All In One (1g)",
     "Panacea Cartridge (1000mg)": "Panacea Live Sauce Cartridge (1000mg)"
   },
-  "default_strain_class": "hybrid"
+  "default_strain_class": "hybrid",
+  "image_recheck_days": 7
 }

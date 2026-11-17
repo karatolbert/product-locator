@@ -210,6 +210,58 @@ def store_name(c, overrides):
     return tidy(name or dba or c.get("display_name") or "")
 
 
+# ---------------------------------------------------------------- photos
+MIRROR_DIR = os.path.join(ROOT, "docs", "img", "ll")
+
+
+def mirror_images(products):
+    """Keep our own resized copy of each LeafLink photo in docs/img/ll/.
+    The file name comes from LeafLink's image address, so a replaced photo
+    (new address) is downloaded fresh and the old copy is removed."""
+    try:
+        from PIL import Image
+    except ImportError:
+        log("Pillow not installed: using LeafLink photo links directly")
+        return
+    import hashlib, io
+    os.makedirs(MIRROR_DIR, exist_ok=True)
+    keep, got, failed = set(), 0, 0
+    for v in products:
+        url = v.get("image") or ""
+        if not url.startswith("http"):
+            continue
+        name = hashlib.sha1(url.split("?")[0].encode()).hexdigest()[:16] + ".jpg"
+        path = os.path.join(MIRROR_DIR, name)
+        if not os.path.exists(path):
+            try:
+                req = urllib.request.Request(url, headers={"User-Agent": "product-locator-sync/1.0"})
+                with urllib.request.urlopen(req, timeout=60) as r:
+                    im = Image.open(io.BytesIO(r.read()))
+                im.load()
+                if im.mode in ("RGBA", "LA", "P"):
+                    im = im.convert("RGBA")
+                    bg = Image.new("RGB", im.size, (255, 255, 255))
+                    bg.paste(im, mask=im.split()[-1])
+                    im = bg
+                else:
+                    im = im.convert("RGB")
+                im.thumbnail((600, 600), Image.LANCZOS)
+                im.save(path, "JPEG", quality=84, optimize=True, progressive=True)
+                got += 1
+            except Exception as e:  # noqa: BLE001
+                log(f"  couldn't copy photo {url[:80]}: {e}")
+                failed += 1
+                continue
+        keep.add(name)
+        v["image"] = "img/ll/" + name
+    removed = 0
+    for f in os.listdir(MIRROR_DIR):
+        if f.endswith(".jpg") and f not in keep:
+            os.remove(os.path.join(MIRROR_DIR, f))
+            removed += 1
+    log(f"Photos: {len(keep)} hosted copies ({got} new, {removed} removed, {failed} failed)")
+
+
 # ---------------------------------------------------------------- main build
 def pick_address(cust, order_addr):
     """Prefer the customer's delivery address (the storefront)."""
@@ -494,7 +546,11 @@ def main():
         ck = str(pid)
         if not p.get("image_count"):
             continue
-        if ck in img_cache and img_cache[ck].get("modified") == p.get("modified"):
+        # Re-ask LeafLink when the listing changed, or every recheck_days anyway
+        # (a photo can be swapped without the listing's "modified" date moving).
+        c = img_cache.get(ck) or {}
+        fresh = c.get("checked", "") >= (dt.date.today() - dt.timedelta(days=int(cfg.get("image_recheck_days", 7)))).isoformat()
+        if c and c.get("modified") == p.get("modified") and fresh:
             continue
         try:
             rows = client_for_pid.get(pid, default_ll).list("product-images", {"product": pid}, page_size=10)
@@ -503,7 +559,8 @@ def main():
             continue
         rows = [r for r in rows if ident(r.get("product")) == pid and r.get("image")]
         rows.sort(key=lambda r: (r.get("position") or 99))
-        img_cache[ck] = {"modified": p.get("modified"), "image": rows[0]["image"] if rows else ""}
+        img_cache[ck] = {"modified": p.get("modified"), "image": rows[0]["image"] if rows else "",
+                         "checked": dt.date.today().isoformat()}
         fetched += 1
     save_json(IMG_CACHE_PATH, img_cache)
     log(f"Looked up images for {fetched} listings")
@@ -521,6 +578,7 @@ def main():
         if not v.get("image"):
             v["image"] = type_img.get((v["brand"], v["type"]), "")
     with_img = sum(1 for v in out_by_key.values() if v["image"])
+    mirror_images(out_by_key.values())
 
     # Strain type: the most common indica/sativa/hybrid tag on the product's listings,
     # then shared across every product with the same strain name in that brand.

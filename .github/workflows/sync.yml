@@ -22,6 +22,9 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install image tools
+        run: pip install --quiet pillow
+
       - name: Pull LeafLink data and build stores.json
         env:
           LEAFLINK_API_KEY: ${{ secrets.LEAFLINK_API_KEY }}
@@ -32,7 +35,7 @@ jobs:
         run: |
           git config user.name "locator-bot"
           git config user.email "locator-bot@users.noreply.github.com"
-          git add docs/stores.json data/geocache.json data/imagecache.json
+          git add -A docs/stores.json docs/img/ll data/geocache.json data/imagecache.json
           if git diff --cached --quiet; then
             echo "No changes"
           else

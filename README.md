@@ -46,6 +46,7 @@ Links can also preselect filters, which is handy for Instagram bios and posts:
 | `default_strain_class` | Strain type (indica / sativa / hybrid) used when a strain has no tag in LeafLink. Set to `hybrid`. |
 | `rename_products` | Show a product under a different name on the website, e.g. Wisenheimer Tugboat → Wisenheimer Live Rosin All In One (1g). |
 | `remove_words` | Words dropped from every product name on the site (e.g. "Distillate"). |
+| `image_recheck_days` | How often (days) to re-check LeafLink for changed product photos. Photos are copied into `docs/img/ll/`. |
 | `type_images` | Generic photo per product (used when a product is picked without a strain). Put the image in `docs/img/products/` and add a line here. |
 | `location_overrides` | Exact map pins for stores whose address can't be looked up, e.g. `"Outcrop Dispensary": [37.68, -106.35]`. |
 
