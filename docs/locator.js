@@ -84,7 +84,7 @@
     ".pl{--pl-accent:#1a1a1a;--pl-line:#e3e3e3;--pl-muted:#6b6b6b;--pl-bg:#fff;--pl-soft:#f6f6f4;",
     "font-family:inherit;color:#1a1a1a;background:var(--pl-bg);border:1px solid var(--pl-line);border-radius:14px;overflow:hidden;line-height:1.4;font-size:15px;text-align:left}",
     ".pl *{box-sizing:border-box}",
-    ".pl-bar{display:grid;grid-template-columns:minmax(230px,1.5fr) .8fr 1.4fr 1fr 104px;gap:10px;padding:14px;border-bottom:1px solid var(--pl-line);background:var(--pl-soft)}",
+    ".pl-bar{display:grid;grid-template-columns:minmax(370px,2.3fr) .8fr 1.4fr 1fr 96px;gap:10px;padding:14px;border-bottom:1px solid var(--pl-line);background:var(--pl-soft)}",
     ".pl-search{display:flex;gap:6px}",
     ".pl input,.pl select{width:100%;height:42px;border:1px solid var(--pl-line);border-radius:9px;padding:0 12px;font:inherit;font-size:15px;background:#fff;color:inherit;margin:0;-webkit-appearance:none;appearance:none}",
     ".pl select:disabled{opacity:.5;cursor:not-allowed}.pl select{background-image:linear-gradient(45deg,transparent 50%,#888 50%),linear-gradient(135deg,#888 50%,transparent 50%);background-position:calc(100% - 17px) 18px,calc(100% - 12px) 18px;background-size:5px 5px;background-repeat:no-repeat;padding-right:30px;text-overflow:ellipsis}",
@@ -92,6 +92,7 @@
     ".pl-btn{height:42px;min-width:42px;border:0;border-radius:9px;background:var(--pl-accent);color:#fff;font:inherit;font-size:14px;font-weight:600;padding:0 14px;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:6px}",
     ".pl-btn.pl-ghost{background:#fff;color:var(--pl-accent);border:1px solid var(--pl-line)}",
     ".pl-btn svg{width:18px;height:18px}",
+    ".pl-go svg{display:none}",
     ".pl-body{display:grid;grid-template-columns:380px 1fr;height:var(--pl-h,620px)}",
     ".pl-side{display:flex;flex-direction:column;border-right:1px solid var(--pl-line);min-height:0}",
     ".pl-feat{display:flex;gap:14px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--pl-line)}",
@@ -127,11 +128,16 @@
     ".pl-pin.pl-on .pl-dot{box-shadow:0 2px 8px rgba(0,0,0,.45)}",
     ".pl-pin-wrap{background:none;border:0}",
     ".pl-empty{padding:30px 20px;text-align:center;color:var(--pl-muted)}",
+    ".pl-note{display:flex;gap:10px;align-items:flex-start;padding:11px 16px;background:#fff6d9;border-bottom:1px solid #f0dc9c;color:#5a4610;font-size:14px;line-height:1.4}",
+    ".pl-note svg{flex:none;width:18px;height:18px;margin-top:1px}",
+    ".pl-note b{color:#3d2f05}",
     ".pl-foot{padding:9px 16px;font-size:12px;color:var(--pl-muted);border-top:1px solid var(--pl-line);background:var(--pl-soft)}",
     ".pl .leaflet-popup-content{font-family:inherit;font-size:14px;margin:12px 14px}",
     ".pl-pop b{display:block;font-size:15px;margin-bottom:2px}",
     "@media (max-width:860px){.pl-bar{grid-template-columns:1fr 104px}.pl-search{grid-column:1/-1}",
     ".pl-bar .pl-prod,.pl-bar .pl-var{grid-column:1/-1;order:3}",
+    ".pl-go span{display:none}.pl-go svg{display:block!important}",
+    ".pl-search input{padding:0 10px}.pl-search input::placeholder{font-size:13.5px}",
     ".pl-body{grid-template-columns:1fr;grid-template-rows:300px auto;height:auto}",
     ".pl-map{order:-1;height:300px}.pl-side{border-right:0}.pl-list{max-height:none}}"
   ].join("");
@@ -162,7 +168,14 @@
 
     this.q = el("input", { type: "search", placeholder: "ZIP code, city, or dispensary name", "aria-label": "ZIP code, city, or dispensary name",
       onkeydown: function (e) { if (e.key === "Enter") { e.preventDefault(); self.search(); } } });
-    var go = el("button", { class: "pl-btn", type: "button", text: "Search", onclick: function () { self.search(); } });
+    var mq = window.matchMedia ? window.matchMedia("(max-width: 480px)") : null;
+    var setPh = function () {
+      self.q.placeholder = mq && mq.matches ? "ZIP, city, or dispensary" : "ZIP code, city, or dispensary name";
+    };
+    setPh();
+    if (mq && mq.addEventListener) mq.addEventListener("change", setPh);
+    var go = el("button", { class: "pl-btn pl-go", type: "button", "aria-label": "Search", onclick: function () { self.search(); },
+      html: '<span>Search</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>' });
     var me = el("button", { class: "pl-btn pl-ghost", type: "button", title: "Use my location", "aria-label": "Use my location",
       html: ICON_LOC, onclick: function () { self.locate(); } });
     this.brandSel = el("select", { "aria-label": "Brand", onchange: function () { self.refresh(); self.render(true); } });
@@ -178,12 +191,16 @@
     this.status = el("div", { class: "pl-status", "aria-live": "polite", text: "Loading stores…" });
     this.list = el("div", { class: "pl-list" });
     this.mapEl = el("div", { class: "pl-map" });
+    this.note = el("div", { class: "pl-note", role: "note", html:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' +
+      '<span><b>Please call the store before you go.</b> This map shows shops that recently ordered our products. It is not a live inventory, so items may have sold out.</span>' });
     this.foot = el("div", { class: "pl-foot" });
 
     r.appendChild(el("div", { class: "pl-bar" }, [
       el("div", { class: "pl-search" }, [this.q, go, me]),
       this.brandSel, this.prodSel, this.varSel, this.radiusSel
     ]));
+    r.appendChild(this.note);
     r.appendChild(el("div", { class: "pl-body" }, [
       el("div", { class: "pl-side" }, [this.feat, this.status, this.list]),
       this.mapEl
@@ -204,8 +221,8 @@
       self.fillBrands();
       self.render(true);
       var d = new Date(self.data.updated);
-      self.foot.textContent = "Stores that ordered from us in the last " + self.data.lookback_days +
-        " days. Stock changes quickly, so please call ahead to confirm. Updated " +
+      self.foot.textContent = "Based on wholesale orders from the last " + self.data.lookback_days +
+        " days. Availability not guaranteed. Updated " +
         d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) + ".";
     }).catch(function (e) {
       console.error("[locator]", e);
