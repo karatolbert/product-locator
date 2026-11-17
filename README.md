@@ -53,6 +53,10 @@ python3 sync/sync.py --key-file ~/Documents/product-locator/leaflink_key.txt
 
 Add `--dump-raw /some/folder` to save the raw LeafLink responses for troubleshooting.
 
+## LeafLink accounts
+
+Each LeafLink company account needs its own key. Colorado uses the secret `LEAFLINK_API_KEY`; Oregon uses `LEAFLINK_API_KEY_OREGON`. To add another account, create a secret named `LEAFLINK_API_KEY_<NAME>` and add a matching line to `.github/workflows/sync.yml`. If one account fails, the others still update.
+
 ## Where the key lives
 
 The LeafLink key is stored only as the GitHub secret `LEAFLINK_API_KEY` (Settings → Secrets and variables → Actions). It never goes on the website. To rotate it, create a new app in LeafLink, update the secret, then delete the old app.

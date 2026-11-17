@@ -236,33 +236,49 @@ def main():
     if os.environ.get("LEAFLINK_BASE_URL"):
         cfg["base_url"] = os.environ["LEAFLINK_BASE_URL"]
 
-    key = os.environ.get("LEAFLINK_API_KEY", "")
+    # One key per LeafLink company account: LEAFLINK_API_KEY (Colorado) plus any
+    # LEAFLINK_API_KEY_<NAME> (e.g. LEAFLINK_API_KEY_OREGON). Empty ones are skipped.
+    keys = []
     if args.key_file:
         with open(os.path.expanduser(args.key_file)) as f:
-            key = f.read().strip()
-    if not key:
+            keys.append(("main", f.read().strip()))
+    for name in sorted(os.environ):
+        if name == "LEAFLINK_API_KEY" or name.startswith("LEAFLINK_API_KEY_"):
+            if os.environ[name].strip():
+                keys.append((name.replace("LEAFLINK_API_KEY", "").strip("_").lower() or "main", os.environ[name].strip()))
+    if not keys:
         raise SystemExit("No API key: set LEAFLINK_API_KEY or pass --key-file")
 
-    ll = LeafLink(key, cfg["base_url"], cfg["auth_scheme"])
     since = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=int(cfg["lookback_days"]))).date().isoformat()
-
-    log(f"Fetching orders since {since} ...")
-    orders = ll.list("orders-received", {
-        "status": ",".join(cfg["order_statuses"]),
-        "created_on__gte": since,
-        "include_children": "line_items,customer",
-    }, page_size=50)
-
-    log("Fetching products ...")
-    products = ll.list("products")
-    log("Fetching brands ...")
-    try:
-        brands = ll.list("brands")
-    except SystemExit as e:
-        log(f"  couldn't list brands ({e}); falling back to names on products")
-        brands = []
-    log("Fetching customers ...")
-    customers = ll.list("customers")
+    orders, products, brands, customers = [], [], [], []
+    client_for_pid = {}
+    failed = []
+    for label, key in keys:
+      ll = LeafLink(key, cfg["base_url"], cfg["auth_scheme"])
+      log(f"=== LeafLink account: {label}")
+      try:
+        acct_orders = ll.list("orders-received", {
+            "status": ",".join(cfg["order_statuses"]),
+            "created_on__gte": since,
+            "include_children": "line_items,customer",
+        }, page_size=50)
+        prods = ll.list("products")
+        try:
+            acct_brands = ll.list("brands")
+        except SystemExit as e:
+            log(f"  couldn't list brands ({e}); falling back to names on products")
+            acct_brands = []
+        acct_customers = ll.list("customers")
+      except SystemExit as e:
+        log(f"!! Skipping account '{label}': {e}")
+        failed.append(label)
+        continue
+      orders += acct_orders; products += prods; brands += acct_brands; customers += acct_customers
+      for p in prods:
+          client_for_pid[p["id"]] = ll
+      default_ll = ll
+    if len(failed) == len(keys):
+        raise SystemExit("Every LeafLink account failed; keeping the existing locator data.")
 
     if args.dump_raw:
         d = os.path.expanduser(args.dump_raw)
@@ -477,7 +493,7 @@ def main():
         if ck in img_cache and img_cache[ck].get("modified") == p.get("modified"):
             continue
         try:
-            rows = ll.list("product-images", {"product": pid}, page_size=10)
+            rows = client_for_pid.get(pid, default_ll).list("product-images", {"product": pid}, page_size=10)
         except SystemExit as e:
             log(f"  image lookup failed for {pid}: {e}")
             continue

@@ -25,6 +25,7 @@ jobs:
       - name: Pull LeafLink data and build stores.json
         env:
           LEAFLINK_API_KEY: ${{ secrets.LEAFLINK_API_KEY }}
+          LEAFLINK_API_KEY_OREGON: ${{ secrets.LEAFLINK_API_KEY_OREGON }}
         run: python3 sync/sync.py
 
       - name: Commit if changed
