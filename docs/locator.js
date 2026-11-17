@@ -97,7 +97,51 @@
     ".pl-rail.pl-has-sel .pl-logo:not(.pl-sel) .pl-lc{opacity:.5;filter:grayscale(.7)}",
     ".pl-rail.pl-has-sel .pl-logo:not(.pl-sel):hover .pl-lc{opacity:.9;filter:none}",
     ".pl-all{background:var(--pl-accent);color:#fff;font-weight:700;font-size:15px;letter-spacing:.02em}",
-    ".pl-bar{display:grid;grid-template-columns:minmax(320px,2.2fr) 1.5fr 1fr 96px;gap:10px;padding:12px 16px 16px}",
+    ".pl-bar{display:grid;grid-template-columns:1fr 120px;gap:10px;padding:12px 16px 12px}",
+    ".pl-bar-top{padding:16px 16px 6px;border-bottom:1px solid var(--pl-line);background:#fff}",
+    ".pl-bar-top+.pl-rail{padding-top:16px;padding-bottom:12px}",
+    ".pl-pick{border-top:1px solid var(--pl-line);background:#fff;display:grid;grid-template-columns:214px 1fr}",
+    ".pl-pmain{min-width:0;display:flex;flex-direction:column}",
+    ".pl-types{border-right:1px solid var(--pl-line);padding:12px 10px 14px 14px;display:flex;flex-direction:column;gap:2px}",
+    ".pl-types-h{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--pl-muted);padding:4px 6px 6px}",
+    ".pl-type{display:flex;align-items:center;gap:8px;padding:6px;border-radius:8px;cursor:pointer;font-size:13.5px;color:#1a1a1a;user-select:none}",
+    ".pl-type:hover{background:var(--pl-soft)}",
+    ".pl-type input{position:absolute;opacity:0;width:1px;height:1px}",
+    ".pl-type input:focus-visible+.pl-tbox{outline:2px solid var(--pl-accent);outline-offset:2px}",
+    ".pl-tbox{flex:none;width:18px;height:18px;border-radius:5px;border:1.5px solid #c4c4c4;background:#fff;display:flex;align-items:center;justify-content:center}",
+    ".pl-tbox svg{width:12px;height:12px;opacity:0}",
+    ".pl-type.pl-sel .pl-tbox{background:var(--pl-accent);border-color:var(--pl-accent)}.pl-type.pl-sel .pl-tbox svg{opacity:1}",
+    ".pl-type.pl-sel{font-weight:600}",
+    ".pl-ticn{flex:none;width:24px;height:24px;color:#333}.pl-ticn svg{width:24px;height:24px}",
+    ".pl-types-h2{margin-top:10px;border-top:1px solid var(--pl-line);padding-top:14px}",
+    ".pl-cdot{flex:none;width:12px;height:12px;border-radius:50%;margin:0 6px}",
+    ".pl-ctag{position:absolute;top:6px;left:6px;z-index:1;width:20px;height:20px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.25);color:#fff;font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1}",
+    ".pl-ph{display:flex;align-items:center;gap:10px;padding:10px 16px;flex-wrap:wrap}",
+    ".pl-tabs{display:inline-flex;background:var(--pl-soft);border:1px solid var(--pl-line);border-radius:999px;padding:3px}",
+    ".pl-tab{border:0;background:none;font:inherit;font-size:14px;font-weight:600;color:var(--pl-muted);padding:7px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}",
+    ".pl-tab.pl-sel{background:#fff;color:#1a1a1a;box-shadow:0 1px 3px rgba(0,0,0,.12)}",
+    ".pl-tab i{font-style:normal;display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:var(--pl-accent);color:#fff;font-size:11px;margin-left:6px;padding:0 5px}",
+    ".pl-pf{flex:1;min-width:160px;max-width:260px;height:36px!important;font-size:14px!important}",
+    ".pl-clear{border:0;background:none;font:inherit;font-size:13px;font-weight:600;color:var(--pl-accent);text-decoration:underline;cursor:pointer;padding:4px}",
+    ".pl-toggle{margin-left:auto;border:0;background:none;font:inherit;font-size:13px;color:var(--pl-muted);cursor:pointer;padding:4px}",
+    ".pl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));align-content:start;gap:10px;padding:2px 16px 16px;flex:1 1 0;min-height:292px;overflow-y:auto}",
+    ".pl-pick.pl-closed .pl-grid,.pl-pick.pl-closed .pl-pf{display:none}",
+    ".pl-tile{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 8px 9px;border:1px solid var(--pl-line);border-radius:12px;background:#fff;cursor:pointer;font:inherit;text-align:center;transition:border-color .15s,box-shadow .15s,transform .15s}",
+    ".pl-tile:hover{border-color:#cfcfcf;box-shadow:0 3px 10px rgba(0,0,0,.08);transform:translateY(-1px)}",
+    ".pl-tile.pl-sel{border-color:var(--pl-accent);box-shadow:0 0 0 1px var(--pl-accent)}",
+    ".pl-tile .pl-ti{width:84px;height:84px;object-fit:contain;border-radius:10px;background:var(--pl-soft)}",
+    ".pl-tile .pl-tn{font-size:12.5px;font-weight:600;line-height:1.25;color:#1a1a1a;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}",
+    ".pl-tile .pl-tb{font-size:11px;color:var(--pl-muted);margin-top:-3px}",
+    ".pl-check{position:absolute;top:7px;right:7px;width:20px;height:20px;border-radius:6px;border:1.5px solid #c9c9c9;background:#fff;display:flex;align-items:center;justify-content:center}",
+    ".pl-tile.pl-sel .pl-check{background:var(--pl-accent);border-color:var(--pl-accent)}",
+    ".pl-check svg{width:13px;height:13px;opacity:0}.pl-tile.pl-sel .pl-check svg{opacity:1}",
+    ".pl-shopby{font-size:13px;font-weight:600;color:var(--pl-muted)}",
+    ".pl-ticon{display:flex;align-items:center;justify-content:center;border-radius:50%!important;color:#1a1a1a}",
+    ".pl-ticon svg{width:56px;height:56px}",
+    ".pl-tile.pl-sel .pl-ticon{background:var(--pl-accent);color:#fff}",
+    ".pl-mini{display:flex;gap:4px;justify-content:center;color:#4a4a4a;margin-top:-1px}",
+    ".pl-mini svg{width:21px;height:21px;stroke-width:3.2}",
+    ".pl-gempty{grid-column:1/-1;color:var(--pl-muted);font-size:14px;padding:14px 4px}",
     ".pl-search{display:flex;gap:6px}",
     ".pl input,.pl select{width:100%;height:42px;border:1px solid var(--pl-line);border-radius:9px;padding:0 12px;font:inherit;font-size:15px;background:#fff;color:inherit;margin:0;-webkit-appearance:none;appearance:none}",
     ".pl select:disabled{opacity:.5;cursor:not-allowed}.pl select{background-image:linear-gradient(45deg,transparent 50%,#888 50%),linear-gradient(135deg,#888 50%,transparent 50%);background-position:calc(100% - 17px) 18px,calc(100% - 12px) 18px;background-size:5px 5px;background-repeat:no-repeat;padding-right:30px;text-overflow:ellipsis}",
@@ -115,6 +159,15 @@
     ".pl-feat img{width:96px;height:96px;object-fit:contain;border-radius:10px;background:var(--pl-soft);flex:none}",
     ".pl-feat .pl-ft{font-weight:700;font-size:15px;line-height:1.25}",
     ".pl-feat .pl-fs{font-size:13px;color:var(--pl-muted);margin-top:2px}",
+    ".pl-srow{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--pl-line);padding-right:10px}",
+    ".pl-srow .pl-status{border-bottom:0;flex:1}",
+    ".pl select.pl-sort{width:auto;height:30px;font-size:12.5px;padding:0 26px 0 10px;border-radius:999px;background-position:calc(100% - 14px) 12px,calc(100% - 9px) 12px;flex:none}",
+    ".pl-recent{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;color:#1d7a46;background:#e6f5ec;border-radius:999px;padding:2px 9px 2px 7px;margin:-2px 0 8px}",
+    ".pl-recent svg{width:11px;height:11px}",
+    ".pl-recent-sm{margin:6px 0 0}",
+    ".pl-pop span{display:block;color:var(--pl-muted)}",
+    ".pl-pop-links{display:flex;gap:12px;margin-top:8px;font-weight:600}.pl-pop-links a{color:var(--pl-accent)}",
+    ".pl-view{display:none}",
     ".pl-status{padding:10px 16px;font-size:13px;color:var(--pl-muted);border-bottom:1px solid var(--pl-line)}",
     ".pl-status b{color:#1a1a1a}",".pl-status a{color:var(--pl-accent);font-weight:600}",
     ".pl-list{overflow-y:auto;flex:1;min-height:0}",
@@ -150,12 +203,30 @@
     "@media (max-width:860px){.pl-bar{grid-template-columns:1fr 104px}.pl-search{grid-column:1/-1}",
     ".pl-rail{gap:12px;padding:14px 14px 2px;-webkit-mask-image:linear-gradient(90deg,#000 85%,transparent);mask-image:linear-gradient(90deg,#000 85%,transparent)}",
     ".pl-lc{width:52px;height:52px}.pl-logo{font-size:11px}",
-    ".pl-bar{padding:10px 14px 14px}",
+    ".pl-bar{padding:10px 14px 12px}",
+    ".pl-ph{padding:10px 14px;gap:8px}.pl-pf{max-width:none;order:5;flex-basis:100%}",
+    ".pl-pick{grid-template-columns:1fr}",
+    ".pl-types{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--pl-line);padding:10px 14px;gap:6px;scrollbar-width:none}",
+    ".pl-types::-webkit-scrollbar{display:none}.pl-types-h{display:none}",
+    ".pl-type{flex:none;border:1px solid var(--pl-line);border-radius:999px;padding:5px 11px 5px 7px;font-size:13px}",
+    ".pl-type .pl-tbox{display:none}.pl-type.pl-sel{background:var(--pl-accent);border-color:var(--pl-accent);color:#fff}.pl-type.pl-sel .pl-ticn{color:#fff}",
+    ".pl-ticn,.pl-ticn svg{width:20px;height:20px}.pl-types-h2{display:none}",
+    ".pl-type.pl-cls.pl-sel .pl-cdot{box-shadow:0 0 0 2px #fff}",
+    ".pl-tab{font-size:13.5px;padding:7px 11px}",
+    ".pl-bar{grid-template-columns:1fr 82px!important}.pl-bar .pl-search{grid-column:auto!important;min-width:0}",
+    ".pl-search input{min-width:0}.pl-bar select{padding-right:24px;background-position:calc(100% - 15px) 18px,calc(100% - 10px) 18px}",
+    ".pl-grid{grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:8px;padding:2px 14px 14px;flex:none;min-height:0;max-height:300px}",
+    ".pl-tile .pl-ti{width:68px;height:68px}.pl-ticon svg{width:46px;height:46px}.pl-shopby{display:none}",
     ".pl-bar .pl-prod{grid-column:1/-1;order:2}.pl-bar .pl-var{grid-column:auto;order:3}.pl-bar>select:last-child{order:4}",
     ".pl-go span{display:none}.pl-go svg{display:block!important}",
     ".pl-search input{padding:0 10px}.pl-search input::placeholder{font-size:13.5px}",
-    ".pl-body{grid-template-columns:1fr;grid-template-rows:300px auto;height:auto}",
-    ".pl-map{order:-1;height:300px}.pl-side{border-right:0}.pl-list{max-height:none}}"
+    ".pl-view{display:flex;gap:4px;margin:10px 14px 0;padding:3px;background:var(--pl-soft);border:1px solid var(--pl-line);border-radius:999px}",
+    ".pl-vbtn{flex:1;border:0;background:none;font:inherit;font-size:14px;font-weight:600;color:var(--pl-muted);padding:8px;border-radius:999px;cursor:pointer}",
+    ".pl-vbtn.pl-sel{background:#fff;color:#1a1a1a;box-shadow:0 1px 3px rgba(0,0,0,.12)}",
+    ".pl-body{grid-template-columns:1fr;grid-template-rows:auto;height:auto;margin-top:10px;border-top:1px solid var(--pl-line)}",
+    ".pl-side{border-right:0}.pl-list{max-height:none}",
+    ".pl.pl-v-list .pl-map{display:none}",
+    ".pl.pl-v-map .pl-side{display:none}.pl.pl-v-map .pl-map{height:72vh;min-height:420px}}"
   ].join("");
 
   var ICON_LOC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/></svg>';
@@ -183,6 +254,23 @@
     d.brands.sort(function (a, b) { return rank(a) - rank(b) || a.localeCompare(b); });
   }
 
+  // ------------------------------------------------------------ tracking
+  // Sends events to Google Analytics 4 (gtag) or Google Tag Manager (dataLayer) if the
+  // page has them, and always fires a "productlocator" DOM event on the widget.
+  function track(root, name, params) {
+    params = params || {};
+    try {
+      if (typeof window.gtag === "function") window.gtag("event", name, params);
+      else if (window.dataLayer && window.dataLayer.push) window.dataLayer.push(Object.assign({ event: name }, params));
+    } catch (e) { /* never let analytics break the locator */ }
+    try { root.dispatchEvent(new CustomEvent("productlocator", { detail: { name: name, params: params }, bubbles: true })); } catch (e) {}
+  }
+
+  function store(k, v) {   // tiny localStorage wrapper (can be blocked)
+    try { if (v === undefined) return JSON.parse(localStorage.getItem("pl-" + k) || "null"); localStorage.setItem("pl-" + k, JSON.stringify(v)); }
+    catch (e) { return null; }
+  }
+
   // ------------------------------------------------------------ widget
   function Locator(root) {
     this.root = root;
@@ -194,7 +282,16 @@
     this.initBrand = params.get("brand") || root.getAttribute("data-brand") || "";
     this.initProduct = params.get("product") || "";
     this.initStrain = params.get("strain") || root.getAttribute("data-strain") || "";
+    this.url = {
+      types: params.getAll("type"), products: params.getAll("product").slice(1), strains: params.getAll("strain").slice(1),
+      kinds: params.getAll("kind"), near: params.get("near") || "", store: params.get("store") || "",
+      radius: params.get("radius") || "", sort: params.get("sort") || "", tab: params.get("tab") || ""
+    };
+    this.recentDays = parseInt(root.getAttribute("data-recent-days"), 10) || 10;
+    this.updateUrl = root.getAttribute("data-update-url") !== "false";
+    this.view = "list";
     this.build();
+    this.setView("list");
     this.load();
   }
 
@@ -209,7 +306,7 @@
       onkeydown: function (e) { if (e.key === "Enter") { e.preventDefault(); self.search(); } } });
     var mq = window.matchMedia ? window.matchMedia("(max-width: 480px)") : null;
     var setPh = function () {
-      self.q.placeholder = mq && mq.matches ? "ZIP, city, or dispensary" : "ZIP code, city, or dispensary name";
+      self.q.placeholder = mq && mq.matches ? "ZIP, city, store" : "ZIP code, city, or dispensary name";
     };
     setPh();
     if (mq && mq.addEventListener) mq.addEventListener("change", setPh);
@@ -218,8 +315,12 @@
     var me = el("button", { class: "pl-btn pl-ghost", type: "button", title: "Use my location", "aria-label": "Use my location",
       html: ICON_LOC, onclick: function () { self.locate(); } });
     this.brandSel = el("select", { "aria-hidden": "true", tabindex: "-1", style: "display:none" });
-    this.prodSel = el("select", { "aria-label": "Product", class: "pl-prod", onchange: function () { self.refresh(); self.render(true); } });
-    this.varSel = el("select", { "aria-label": "Strain", class: "pl-var", onchange: function () { self.refresh(); self.render(true); } });
+    this.selCats = {};       // "cart" / "aio" / ... -> true
+    this.selClass = {};      // "indica" / "sativa" / "hybrid" -> true
+    this.selTypes = {};      // "Brand||Type" -> true
+    this.selStrains = {};    // normalised strain -> display name
+    this.tab = "product";
+    this.pickFilter = "";
     this.radiusSel = el("select", { "aria-label": "Distance", onchange: function () { self.render(true); } });
     [["10", "10 mi"], ["25", "25 mi"], ["50", "50 mi"], ["100", "100 mi"], ["0", "Any distance"]].forEach(function (o) {
       self.radiusSel.appendChild(el("option", { value: o[0], text: o[1] }));
@@ -227,7 +328,15 @@
     this.radiusSel.value = "25";
 
     this.feat = el("div", { class: "pl-feat", hidden: "" });
-    this.status = el("div", { class: "pl-status", "aria-live": "polite", text: "Loading stores…" });
+    this.status = el("div", { class: "pl-status", "aria-live": "polite", text: "Loading stores\u2026" });
+    this.sortSel = el("select", { class: "pl-sort", "aria-label": "Sort stores", onchange: function () {
+      self.track("locator_sort", { sort: self.sortSel.value }); self.render(false); } });
+    [["near", "Nearest first"], ["recent", "Recently stocked"]].forEach(function (o) { self.sortSel.appendChild(el("option", { value: o[0], text: o[1] })); });
+    this.viewBtns = {};
+    this.viewBar = el("div", { class: "pl-view", role: "tablist", "aria-label": "Show as" }, ["list", "map"].map(function (v) {
+      return (self.viewBtns[v] = el("button", { type: "button", class: "pl-vbtn", text: v === "list" ? "List" : "Map",
+        onclick: function () { self.setView(v); self.track("locator_view", { view: v }); } }));
+    }));
     this.list = el("div", { class: "pl-list" });
     this.mapEl = el("div", { class: "pl-map" });
     this.note = el("div", { class: "pl-note", role: "note", html:
@@ -236,16 +345,19 @@
     this.foot = el("div", { class: "pl-foot" });
 
     this.rail = el("div", { class: "pl-rail", role: "group", "aria-label": "Filter by brand" });
+    // Where first (location), then what (brand \u2192 type / product / strain)
     r.appendChild(el("div", { class: "pl-head" }, [
-      this.rail,
-      el("div", { class: "pl-bar" }, [
+      el("div", { class: "pl-bar pl-bar-top" }, [
         el("div", { class: "pl-search" }, [this.q, go, me]),
-        this.prodSel, this.varSel, this.radiusSel
-      ])
+        this.radiusSel
+      ]),
+      this.rail,
+      this.buildPicker()
     ]));
     r.appendChild(this.note);
+    r.appendChild(this.viewBar);
     r.appendChild(el("div", { class: "pl-body" }, [
-      el("div", { class: "pl-side" }, [this.feat, this.status, this.list]),
+      el("div", { class: "pl-side" }, [this.feat, el("div", { class: "pl-srow" }, [this.status, this.sortSel]), this.list]),
       this.mapEl
     ]));
     r.appendChild(this.foot);
@@ -265,6 +377,7 @@
       self.initMap();
       self.fillBrands();
       self.render(true);
+      self.startNearby();
       var d = new Date(self.data.updated);
       self.foot.textContent = "Based on wholesale orders from the last " + self.data.lookback_days +
         " days. Availability not guaranteed. Updated " +
@@ -288,8 +401,23 @@
     this.map.on("blur", function () { self.map.scrollWheelZoom.disable(); });
   };
 
+  Locator.prototype.isPhone = function () { return window.matchMedia && window.matchMedia("(max-width: 860px)").matches; };
+  Locator.prototype.setView = function (v) {
+    this.view = v;
+    this.root.classList.toggle("pl-v-map", v === "map");
+    this.root.classList.toggle("pl-v-list", v !== "map");
+    this.viewBtns.list.classList.toggle("pl-sel", v !== "map");
+    this.viewBtns.map.classList.toggle("pl-sel", v === "map");
+    var m = this.map;
+    if (m) setTimeout(function () { m.invalidateSize(); }, 30);
+  };
+
+  Locator.prototype.track = function (name, params) { track(this.root, name, params); };
+
   Locator.prototype.pickBrand = function (b) {
-    this.brandSel.value = this.brandSel.value === b ? "" : b;   // click again to clear
+    var on = this.brandSel.value !== b;
+    this.brandSel.value = on ? b : "";   // click again to clear
+    this.track("locator_filter", { filter: "brand", value: b, action: on ? "add" : "remove" });
     this.refresh(); this.render(true);
   };
 
@@ -317,80 +445,294 @@
     d.brands.forEach(function (b) { s.appendChild(el("option", { value: b, text: b })); });
     var want = d.brands.filter(function (b) { return norm(b) === norm(self.initBrand); })[0];
     if (want) s.value = want;
-    this.fillTypes();
     var q = norm(this.initProduct);
     if (q) {
       var p = d.products.filter(function (p) { return p.id === q || norm(p.name) === q; })[0];
-      var t = p ? null : d.products.filter(function (p) { return norm(p.type) === q; })[0];
-      var hit = p || t;
-      if (hit) {
-        s.value = hit.brand; this.fillTypes();
-        this.prodSel.value = hit.brand + "||" + hit.type;
-        this.fillVariants();
-        if (p && p.variant) this.varSel.value = norm(p.variant);
-      }
+      var t = p || d.products.filter(function (p) { return norm(p.type) === q; })[0];
+      if (t) { this.selTypes[t.brand + "||" + t.type] = true; if (!want) s.value = t.brand; }
+      if (p && isStrain(p)) { this.selStrains[norm(p.variant)] = p.variant; this.tab = "strain"; }
     }
-    if (this.initStrain) { this.fillVariants(); this.varSel.value = norm(this.initStrain); }
+    if (this.initStrain) {
+      var hit = d.products.filter(function (p) { return isStrain(p) && norm(p.variant) === norm(self.initStrain); })[0];
+      if (hit) { this.selStrains[norm(hit.variant)] = hit.variant; this.tab = "strain"; }
+    }
+    // the rest of a shared link: ?type=aio&product=...&strain=...&kind=indica&near=80202
+    var u = this.url;
+    u.types.forEach(function (k) { if (CATS.some(function (c) { return c.key === k; })) self.selCats[k] = true; });
+    u.kinds.forEach(function (k) { if (CLASSES.some(function (c) { return c.key === k; })) self.selClass[k] = true; });
+    u.products.forEach(function (q) {
+      var t = d.products.filter(function (p) { return norm(p.type) === norm(q); })[0];
+      if (t) self.selTypes[t.brand + "||" + t.type] = true;
+    });
+    u.strains.forEach(function (q) {
+      var t = d.products.filter(function (p) { return isStrain(p) && norm(p.variant) === norm(q); })[0];
+      if (t) self.selStrains[norm(t.variant)] = t.variant;
+    });
+    if (u.radius && this.radiusSel.querySelector('option[value="' + u.radius + '"]')) this.radiusSel.value = u.radius;
+    if (u.sort === "recent") this.sortSel.value = "recent";
+    if (u.tab === "strain" || u.tab === "product") this.tab = u.tab;
     this.refresh();
   };
 
-  // Keep Brand / Product / Strain consistent with each other
-  Locator.prototype.refresh = function () {
-    this.fillTypes(); this.fillVariants(true); this.fillTypes();
-  };
-
-  // Product = product type within a brand (e.g. "Oil Tugboat All In One (1g)")
-  Locator.prototype.fillTypes = function () {
-    var b = this.brandSel.value, v = this.varSel.value, s = this.prodSel, prev = s.value, seen = {}, groups = {};
-    s.innerHTML = "";
-    var vt = v && this.varSel.selectedIndex > 0 ? this.varSel.options[this.varSel.selectedIndex].text + " " : "";
-    s.appendChild(el("option", { value: "", text: "All " + (b ? b + " " : "") + vt + "products" }));
-    this.data.products.forEach(function (p) {
-      if (b && p.brand !== b) return;
-      if (v && norm(p.variant) !== v) return;   // strain picked first: only products it comes in
-      var k = p.brand + "||" + p.type;
-      if (seen[k]) return;
-      seen[k] = 1;
-      (groups[p.brand] = groups[p.brand] || []).push(p);
-    });
-    Object.keys(groups).sort().forEach(function (g) {
-      var parent = b ? s : s.appendChild(el("optgroup", { label: g }));
-      groups[g].forEach(function (p) { parent.appendChild(el("option", { value: p.brand + "||" + p.type, text: p.type })); });
-    });
-    if (prev && seen[prev]) s.value = prev;
-  };
-
-  // Strain list: every strain, narrowed by brand / product when those are chosen.
-  // Non-strain variants (battery colours, variety packs) are left out.
   function isStrain(p) {
     return p.variant && !/battery|variety|sampler/i.test(p.type + " " + p.variant);
   }
-  Locator.prototype.fillVariants = function (keep) {
-    var s = this.varSel, b = this.brandSel.value, t = this.prodSel.value, prev = s.value, seen = {}, list = [];
+  function count(o) { return Object.keys(o).length; }
+  function resolve(src) { return !src || /^(https?:|data:)/.test(src) ? src : scriptBase + src; }
+
+  // Products / strains that fit the brand and the other tab's picks
+  Locator.prototype.typeOptions = function () {
+    var self = this, b = this.brandSel.value, ss = this.selStrains, out = {}, order = [];
+    this.data.products.forEach(function (p) {
+      if (b && p.brand !== b) return;
+      var k = p.brand + "||" + p.type;
+      if (count(ss) && !(isStrain(p) && ss[norm(p.variant)]) && !self.selTypes[k]) return;
+      if (count(self.selCats) && !inCats(p, self.selCats) && !self.selTypes[k]) return;
+      if (!classOk(p, self.selClass) && !self.selTypes[k]) return;
+      if (!out[k]) { out[k] = { key: k, brand: p.brand, type: p.type, items: [] }; order.push(k); }
+      out[k].items.push(p);
+    });
+    return order.map(function (k) { return out[k]; });
+  };
+  Locator.prototype.catOptions = function () {
+    var b = this.brandSel.value, ss = this.selStrains, self = this, found = {};
+    this.data.products.forEach(function (p) {
+      if (b && p.brand !== b) return;
+      if (count(ss) && !(isStrain(p) && ss[norm(p.variant)])) return;
+      if (!classOk(p, self.selClass)) return;
+      catsOf(p.type).forEach(function (k) { (found[k] = found[k] || []).push(p); });
+    });
+    return CATS.filter(function (c) { return found[c.key] || self.selCats[c.key]; })
+      .map(function (c) { return { key: c.key, name: c.name, items: found[c.key] || [] }; });
+  };
+
+  Locator.prototype.strainOptions = function () {
+    var self = this, b = this.brandSel.value, st = this.selTypes, out = {}, order = [];
     this.data.products.forEach(function (p) {
       if (!isStrain(p)) return;
-      if (t ? p.brand + "||" + p.type !== t : b && p.brand !== b) return;
+      if (b && p.brand !== b) return;
       var k = norm(p.variant);
-      if (!seen[k]) { seen[k] = 1; list.push(p.variant); }
+      if (count(st) && !st[p.brand + "||" + p.type] && !self.selStrains[k]) return;
+      if (count(self.selCats) && !inCats(p, self.selCats) && !self.selStrains[k]) return;
+      if (!classOk(p, self.selClass) && !self.selStrains[k]) return;
+      if (!out[k]) { out[k] = { key: k, name: p.variant, items: [] }; order.push(k); }
+      out[k].items.push(p);
     });
-    list.sort(function (a, c) { return a.localeCompare(c); });
-    s.innerHTML = "";
-    s.appendChild(el("option", { value: "", text: list.length ? "All strains" : "—" }));
-    list.forEach(function (v) { s.appendChild(el("option", { value: norm(v), text: v })); });
-    s.disabled = !list.length;
-    if (keep && prev && seen[prev]) s.value = prev;
+    return order.map(function (k) { return out[k]; }).sort(function (a, c) { return a.name.localeCompare(c.name); });
+  };
+
+  // Drop picks that no longer fit (e.g. after changing brand)
+  // Picks only drop when the brand changes and they don't belong to it
+  Locator.prototype.refresh = function () {
+    var self = this, b = this.brandSel.value;
+    if (!b) return;
+    var cats = {};
+    this.data.products.forEach(function (p) { if (p.brand === b) catsOf(p.type).forEach(function (k) { cats[k] = 1; }); });
+    Object.keys(this.selCats).forEach(function (k) { if (!cats[k]) delete self.selCats[k]; });
+    Object.keys(this.selTypes).forEach(function (k) { if (k.split("||")[0] !== b) delete self.selTypes[k]; });
+    var inBrand = {};
+    this.data.products.forEach(function (p) { if (p.brand === b && isStrain(p)) inBrand[norm(p.variant)] = 1; });
+    Object.keys(this.selStrains).forEach(function (k) { if (!inBrand[k]) delete self.selStrains[k]; });
   };
 
   Locator.prototype.wanted = function () {
-    var b = this.brandSel.value, t = this.prodSel.value, v = this.varSel.value;
-    if (!b && !t && !v) return null;
+    var self = this, b = this.brandSel.value, sc = this.selCats, st = this.selTypes, ss = this.selStrains;
+    if (!b && !count(sc) && !count(st) && !count(ss) && !count(this.selClass)) return null;
     var ok = {};
     this.data.products.forEach(function (p) {
-      if (t ? p.brand + "||" + p.type !== t : b && p.brand !== b) return;
-      if (v && norm(p.variant) !== v) return;
+      if (b && p.brand !== b) return;
+      if (count(sc) && !inCats(p, sc)) return;
+      if (!classOk(p, self.selClass)) return;
+      if (count(st) && !st[p.brand + "||" + p.type]) return;
+      if (count(ss) && !(isStrain(p) && ss[norm(p.variant)])) return;
       ok[p.id] = 1;
     });
     return ok;
+  };
+
+  Locator.prototype.buildPicker = function () {
+    var self = this;
+    this.pick = el("div", { class: "pl-pick" });
+    function go(t) { return function () { self.tab = t; self.pickFilter = ""; self.pf.value = ""; self.open(); self.renderPicker(); }; }
+    this.tabP = el("button", { type: "button", class: "pl-tab", onclick: go("product") });
+    this.tabS = el("button", { type: "button", class: "pl-tab", onclick: go("strain") });
+    this.pf = el("input", { type: "search", class: "pl-pf", placeholder: "Find a product",
+      oninput: function () { self.pickFilter = norm(self.pf.value); self.renderPicker(); } });
+    this.clearBtn = el("button", { type: "button", class: "pl-clear", text: "Clear picks",
+      onclick: function () { self.selCats = {}; self.selClass = {}; self.selTypes = {}; self.selStrains = {}; self.render(true); } });
+    this.toggleBtn = el("button", { type: "button", class: "pl-toggle", onclick: function () {
+      self.pick.classList.toggle("pl-closed"); self.renderPicker(); } });
+    this.grid = el("div", { class: "pl-grid", role: "group" });
+    this.pick.appendChild(el("div", { class: "pl-ph" }, [
+      el("span", { class: "pl-shopby", text: "Shop by" }),
+      el("div", { class: "pl-tabs", role: "tablist" }, [this.tabP, this.tabS]), this.pf, this.clearBtn, this.toggleBtn]));
+    this.pick.appendChild(this.grid);
+    this.typeBox = el("div", { class: "pl-types", role: "group", "aria-label": "Product type" });
+    var main = el("div", { class: "pl-pmain" });
+    while (this.pick.firstChild) main.appendChild(this.pick.firstChild);
+    this.pick.appendChild(this.typeBox);
+    this.pick.appendChild(main);
+    return this.pick;
+  };
+  // Small checkbox list of device types, beside the Product / Strain grid
+  Locator.prototype.renderTypes = function () {
+    var self = this, box = this.typeBox, opts = this.catOptions();
+    box.innerHTML = "";
+    box.appendChild(el("div", { class: "pl-types-h", text: "Type" }));
+    opts.forEach(function (o) {
+      var on = !!self.selCats[o.key];
+      var row = el("label", { class: "pl-type" + (on ? " pl-sel" : "") }, [
+        el("input", { type: "checkbox", onchange: function () {
+          if (self.selCats[o.key]) delete self.selCats[o.key]; else self.selCats[o.key] = true;
+          self.track("locator_filter", { filter: "type", value: o.name, action: self.selCats[o.key] ? "add" : "remove" });
+          self.refresh(); self.render(true); } }),
+        el("span", { class: "pl-tbox", html: CHECK }),
+        el("span", { class: "pl-ticn", html: ICONS[o.key] }),
+        el("span", { class: "pl-tlabel", text: o.name })
+      ]);
+      row.querySelector("input").checked = on;
+      box.appendChild(row);
+    });
+    // Strain type
+    var have = {};
+    this.data.products.forEach(function (p) {
+      if (self.brandSel.value && p.brand !== self.brandSel.value) return;
+      if (isStrain(p) && p["class"]) have[p["class"]] = 1;
+    });
+    var cl = CLASSES.filter(function (c) { return have[c.key] || self.selClass[c.key]; });
+    if (cl.length) box.appendChild(el("div", { class: "pl-types-h pl-types-h2", text: "Strain type" }));
+    cl.forEach(function (c) {
+      var on = !!self.selClass[c.key];
+      var row = el("label", { class: "pl-type pl-cls" + (on ? " pl-sel" : "") }, [
+        el("input", { type: "checkbox", onchange: function () {
+          if (self.selClass[c.key]) delete self.selClass[c.key]; else self.selClass[c.key] = true;
+          self.track("locator_filter", { filter: "strain_type", value: c.name, action: self.selClass[c.key] ? "add" : "remove" });
+          self.render(true); } }),
+        el("span", { class: "pl-tbox", html: CHECK }),
+        el("span", { class: "pl-cdot", style: "background:" + c.color }),
+        el("span", { class: "pl-tlabel", text: c.name })
+      ]);
+      row.querySelector("input").checked = on;
+      box.appendChild(row);
+    });
+  };
+
+  Locator.prototype.open = function () { this.pick.classList.remove("pl-closed"); };
+
+  // Simple line icons for each kind of device (64x64, stroke = currentColor)
+  function svg(body) {
+    return '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">' + body + "</svg>";
+  }
+  var ICONS = {
+    cart: svg('<path d="M25.5 15v-4.5a6.5 6.5 0 0 1 13 0V15"/><rect x="25.5" y="15" width="13" height="29" rx="3"/><rect x="28" y="30" width="8" height="11" rx="1.5" fill="currentColor" opacity=".22" stroke="none"/><path d="M28 30h8"/><path d="M27.5 44v12h9V44"/><path d="M27.5 49h9M27.5 52.5h9"/>'),
+    aio: svg('<path d="M25 5.5h14l2 9H23z"/><rect x="15" y="14.5" width="34" height="44" rx="6"/><rect x="25.5" y="22" width="13" height="18" rx="3"/><rect x="27.5" y="31" width="9" height="7" rx="1.5" fill="currentColor" opacity=".22" stroke="none"/><circle cx="32" cy="49.5" r="2.4"/>'),
+    pack: svg('<rect x="8" y="7" width="48" height="50" rx="5"/><path d="M8 16.5h48"/>' +
+      '<rect x="14" y="24" width="6" height="25" rx="2"/><rect x="24" y="24" width="6" height="25" rx="2"/>' +
+      '<rect x="34" y="24" width="6" height="25" rx="2"/><rect x="44" y="24" width="6" height="25" rx="2"/>'),
+    preroll: svg('<path d="M28.5 48 23 19M35.5 48 41 19"/><rect x="28" y="48" width="8" height="10" rx="2"/><path d="M28 52h8"/><path d="M23 19c2-4 5.2-7.3 7.8-10M41 19c-2-4-5.2-7.3-7.8-10"/><path d="M30.8 9c.7.9 1.7.9 2.4 0"/><path d="M30.8 9c-1.5-2.5 4.5-2.8 2.6-5.4-.8-1.1-.4-2.6 1.2-3"/>'),
+    battery: svg('<path d="M28 9V4h8v5"/><rect x="25" y="9" width="14" height="50" rx="5"/><circle cx="32" cy="21" r="3"/>' +
+      '<path d="M29 48h6M29 52h6" opacity=".7"/>'),
+    syringe: svg('<path d="M23 5h18M32 5v10"/><rect x="25" y="15" width="14" height="32" rx="2.5"/>' +
+      '<rect x="27.5" y="31" width="9" height="13.5" rx="1" fill="currentColor" opacity=".22" stroke="none"/>' +
+      '<path d="M25 22h6M25 28h6M25 34h6M25 40h6"/><path d="M29.5 47v5h5v-5M32 52v8"/>')
+  };
+  // "Shop by type" groups. A product can sit in more than one (a cone variety pack is a pack and a pre-roll).
+  var CATS = [
+    { key: "cart", name: "Cartridges", test: function (t) { return /cartridge/i.test(t) && !/variety|pack/i.test(t); } },
+    { key: "aio", name: "All-in-ones", test: function (t) { return /all.?in.?one|seshie/i.test(t); } },
+    { key: "pack", name: "Variety packs", test: function (t) { return /variety|\bpack\b/i.test(t); } },
+    { key: "preroll", name: "Infused pre-rolls", test: function (t) { return /cone|pre-?roll/i.test(t); } },
+    { key: "battery", name: "Batteries", test: function (t) { return /battery/i.test(t); } },
+    { key: "syringe", name: "Syringes", test: function (t) { return /syringe/i.test(t); } }
+  ];
+  var CLASSES = [
+    { key: "indica", name: "Indica", color: "#6b4fa0" },
+    { key: "sativa", name: "Sativa", color: "#e0662b" },
+    { key: "hybrid", name: "Hybrid", color: "#2f8f5b" }
+  ];
+  function classOk(p, sel) { return !count(sel) || (isStrain(p) && !!sel[p["class"]]); }
+  function catsOf(type) { return CATS.filter(function (c) { return c.test(type); }).map(function (c) { return c.key; }); }
+  function inCats(p, sel) { return catsOf(p.type).some(function (k) { return sel[k]; }); }
+  function iconFor(type) { var k = catsOf(type)[0]; return k ? ICONS[k] : ""; }
+
+  var CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+
+  Locator.prototype.renderPicker = function () {
+    var self = this, d = this.data, b = this.brandSel.value, f = this.pickFilter;
+    var nc = count(this.selCats), nt = count(this.selTypes), ns = count(this.selStrains), me = this;
+    [[this.tabP, "Product", nt, "product"], [this.tabS, "Strain", ns, "strain"]].forEach(function (x) {
+      x[0].innerHTML = ""; x[0].appendChild(document.createTextNode(x[1]));
+      if (x[2]) x[0].appendChild(el("i", { text: String(x[2]) }));
+      x[0].classList.toggle("pl-sel", me.tab === x[3]);
+    });
+    this.pf.placeholder = this.tab === "product" ? "Find a product" : "Find a strain";
+    this.clearBtn.hidden = !(nc || nt || ns || count(this.selClass));
+    this.renderTypes();
+    var closed = this.pick.classList.contains("pl-closed");
+    this.toggleBtn.textContent = closed ? "Show options \u25be" : "Hide \u25b4";
+    if (closed) return;
+
+    var grid = this.grid; grid.innerHTML = "";
+    function tile(selected, img, name, sub, onclick, icon, minis, cls) {
+      var t = el("button", { type: "button", class: "pl-tile" + (selected ? " pl-sel" : ""), "aria-pressed": String(!!selected), title: name, onclick: onclick }, [
+        el("span", { class: "pl-check", html: CHECK }),
+        cls ? el("span", { class: "pl-ctag", text: cls.charAt(0).toUpperCase(), title: cls.charAt(0).toUpperCase() + cls.slice(1),
+          "aria-label": cls, style: "background:" + ((CLASSES.filter(function (c) { return c.key === cls; })[0] || {}).color || "#888") }) : null,
+        icon ? el("span", { class: "pl-ti pl-ticon", html: icon })
+          : img ? el("img", { class: "pl-ti", src: resolve(img), alt: "", loading: "lazy" }) : el("span", { class: "pl-ti" }),
+        el("span", { class: "pl-tn", text: name }),
+        minis && minis.length ? el("span", { class: "pl-mini", html:
+          minis.map(function (k) { return '<span title="' + k[1] + '">' + ICONS[k[0]] + "</span>"; }).join("") }) : null,
+        sub ? el("span", { class: "pl-tb", text: sub }) : null
+      ]);
+      var im = t.querySelector("img"); if (im) im.onerror = function () { im.style.visibility = "hidden"; };
+      grid.appendChild(t);
+    }
+    if (this.tab === "cat") {
+      this.catOptions().forEach(function (o) {
+        var bs = {}; o.items.forEach(function (p) { bs[p.brand] = 1; });
+        var nb = Object.keys(bs).length;
+        tile(self.selCats[o.key], "", o.name, b ? "" : nb + (nb === 1 ? " brand" : " brands"), function () {
+          if (self.selCats[o.key]) delete self.selCats[o.key]; else self.selCats[o.key] = true;
+          self.track("locator_filter", { filter: "type", value: o.name, action: self.selCats[o.key] ? "add" : "remove" });
+          self.refresh(); self.render(true);
+        }, ICONS[o.key]);
+      });
+    } else if (this.tab === "product") {
+      var opts = this.typeOptions().filter(function (o) { return !f || norm(o.type).indexOf(f) >= 0; });
+      opts.forEach(function (o) {
+        var withImg = o.items.filter(function (p) { return p.image; })[0];
+        var img = (d.type_images || {})[o.type] || (withImg ? withImg.image : "") || (d.brand_images || {})[o.brand];
+        var label = o.type.replace(new RegExp("^" + o.brand.replace(/[.*+?^${}()|[\]\\!]/g, "\\$&") + "\\s+"), "");
+        var n = o.items.filter(isStrain).length;
+        tile(self.selTypes[o.key], img, label, (b ? "" : o.brand) + (n ? (b ? "" : " \u00b7 ") + n + (n === 1 ? " strain" : " strains") : ""), function () {
+          if (self.selTypes[o.key]) delete self.selTypes[o.key]; else self.selTypes[o.key] = true;
+          self.track("locator_filter", { filter: "product", value: o.type, action: self.selTypes[o.key] ? "add" : "remove" });
+          self.refresh(); self.render(true);
+        });
+      });
+      if (!opts.length) grid.appendChild(el("div", { class: "pl-gempty", text: "No products match." }));
+    } else {
+      var si = d.strain_images || {};
+      var sopts = this.strainOptions().filter(function (o) { return !f || o.key.indexOf(f) >= 0; });
+      sopts.forEach(function (o) {
+        var art = "";
+        o.items.some(function (p) { var m = si[p.brand] || {}; for (var k in m) if (norm(k) === o.key) { art = m[k]; return true; } return false; });
+        var brands = {}; o.items.forEach(function (p) { brands[p.brand] = 1; });
+        var bl = Object.keys(brands);
+        var logo = (d.brand_images || {})[b || bl[0]] || "";
+        var kinds = {}, minis = [];
+        o.items.forEach(function (p) { var k = catsOf(p.type).filter(function (x) { return x !== "pack"; })[0] || catsOf(p.type)[0];
+          if (k && !kinds[k]) { kinds[k] = 1; minis.push([k, CATS.filter(function (c) { return c.key === k; })[0].name]); } });
+        var cls = (o.items.filter(function (p) { return p["class"]; })[0] || {})["class"];
+        tile(self.selStrains[o.key], art || logo, o.name, b ? "" : bl.join(", "), function () {
+          if (self.selStrains[o.key]) delete self.selStrains[o.key]; else self.selStrains[o.key] = o.name;
+          self.track("locator_filter", { filter: "strain", value: o.name, action: self.selStrains[o.key] ? "add" : "remove" });
+          self.refresh(); self.render(true);
+        }, "", minis, cls);
+      });
+      if (!sopts.length) grid.appendChild(el("div", { class: "pl-gempty", text: "No strains match." }));
+    }
   };
 
   Locator.prototype.matches = function (store, ok) {
@@ -406,23 +748,55 @@
     var isTown = this.data.stores.some(function (s) { return norm(s.city) === nq.replace(/\s+(co|colorado)$/, ""); });
     if (!/^\d{5}$/.test(q.trim()) && !isTown && nq.length >= 3) {
       var hits = this.data.stores.filter(function (s) { return norm(s.name).replace(/[^a-z0-9 ]/g, "").indexOf(nq) >= 0; });
-      if (hits.length) { this.nameQuery = nq; this.origin = null; this.render(true); return; }
+      if (hits.length) {
+        this.nameQuery = nq; this.origin = null; this.render(true);
+        this.track("locator_search", { search_term: q.trim(), search_kind: "store", results: hits.length });
+        return;
+      }
     }
-    this.status.textContent = "Finding " + q + "…";
-    geocode(q).then(function (o) { self.origin = o; self.render(true); })
-      .catch(function () { self.status.textContent = "We couldn't find “" + q + "”. Try a 5-digit ZIP code."; });
+    this.status.textContent = "Finding " + q + "\u2026";
+    geocode(q).then(function (o) {
+      o.query = q.trim(); self.origin = o; self.autoRadius = true; self.render(true);
+      store("last", { near: o.query });
+      self.track("locator_search", { search_term: o.query, search_kind: /^\d{5}$/.test(o.query) ? "zip" : "city", results: self.lastCount });
+    }).catch(function () {
+      self.status.textContent = "We couldn't find \u201c" + q + "\u201d. Try a 5-digit ZIP code.";
+      self.track("locator_search", { search_term: q.trim(), search_kind: "not_found", results: 0 });
+    });
   };
 
-  Locator.prototype.locate = function () {
+  Locator.prototype.locate = function (quiet) {
     var self = this;
-    if (!navigator.geolocation) { this.status.textContent = "Your browser can't share location. Try a ZIP code."; return; }
-    this.status.textContent = "Finding your location…";
+    if (!navigator.geolocation) { if (!quiet) this.status.textContent = "Your browser can't share location. Try a ZIP code."; return; }
+    if (!quiet) this.status.textContent = "Finding your location\u2026";
+    store("asked", 1);
     navigator.geolocation.getCurrentPosition(function (p) {
       self.origin = { lat: p.coords.latitude, lng: p.coords.longitude, label: "your location" };
-      self.q.value = ""; self.nameQuery = "";
+      self.q.value = ""; self.nameQuery = ""; self.autoRadius = true;
+      store("last", { geo: 1 });
       self.render(true);
-    }, function () { self.status.textContent = "Location wasn't shared. Enter a ZIP code instead."; },
-    { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 });
+      self.track("locator_location", { result: "shared", results: self.lastCount });
+    }, function () {
+      store("last", null);
+      self.render(false);
+      if (!quiet) self.status.textContent = "Location wasn't shared. Enter a ZIP code instead.";
+      self.track("locator_location", { result: "declined" });
+    }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 });
+  };
+
+  // Start sorted by distance: a shared link's ZIP, then the visitor's last ZIP or location,
+  // otherwise ask for location once (first visit only).
+  Locator.prototype.startNearby = function () {
+    var self = this, u = this.url, last = store("last");
+    if (u.store) { this.q.value = u.store; this.search(); return; }
+    if (u.near) { this.q.value = u.near; this.search(); return; }
+    if (last && last.near) { this.q.value = last.near; this.search(); return; }
+    if (last && last.geo) { this.locate(true); return; }
+    if (navigator.permissions && navigator.permissions.query) {
+      navigator.permissions.query({ name: "geolocation" }).then(function (r) {
+        if (r.state === "granted" || (r.state === "prompt" && !store("asked"))) self.locate(true);
+      }).catch(function () { if (!store("asked")) self.locate(true); });
+    } else if (!store("asked")) this.locate(true);
   };
 
   Locator.prototype.render = function (fit) {
@@ -435,19 +809,37 @@
     }).map(function (s) {
       return { s: s, d: o ? miles([o.lat, o.lng], [s.lat, s.lng]) : null };
     });
-    var total = rows.length;
+    var total = rows.length, widened = false;
+    // Nothing nearby? Widen the distance once, after a new search or location.
+    if (o && radius && this.autoRadius && total && !rows.some(function (r) { return r.d <= radius; })) {
+      var steps = ["25", "50", "100", "0"];
+      for (var si = steps.indexOf(String(radius)) + 1; si < steps.length; si++) {
+        var r2 = +steps[si];
+        if (!r2 || rows.some(function (r) { return r.d <= r2; })) { this.radiusSel.value = steps[si]; radius = r2; widened = true; break; }
+      }
+    }
+    this.autoRadius = false;
     if (o && radius) rows = rows.filter(function (r) { return r.d <= radius; });
-    rows.sort(o ? function (a, b) { return a.d - b.d; }
-      : function (a, b) { return (a.s.state + a.s.city + a.s.name).localeCompare(b.s.state + b.s.city + b.s.name); });
+    var now = Date.now(), recentMs = this.recentDays * 864e5;
+    rows.forEach(function (r) { r.age = r.s.last_order ? now - Date.parse(r.s.last_order + "T12:00:00") : Infinity; r.recent = r.age <= recentMs; });
+    var byPlace = function (a, b) { return (a.s.state + a.s.city + a.s.name).localeCompare(b.s.state + b.s.city + b.s.name); };
+    var byDist = function (a, b) { return a.d - b.d; };
+    rows.sort(this.sortSel.value === "recent" ? function (a, b) { return (a.age - b.age) || (o ? byDist(a, b) : byPlace(a, b)); }
+      : o ? byDist : byPlace);
+    this.lastCount = rows.length;
 
     this.renderFeature();
     this.renderRail();
+    this.renderPicker();
+    this.writeUrl();
 
     // status line
-    var vt = this.varSel.value ? this.varSel.options[this.varSel.selectedIndex].text : "";
-    var pt = this.prodSel.value ? this.prodSel.options[this.prodSel.selectedIndex].text : "";
-    var what = pt && vt ? pt + " – " + vt : pt || (vt ? (this.brandSel.value ? this.brandSel.value + " " : "") + vt
-      : (this.brandSel.value || "our products"));
+    var picks = Object.keys(this.selClass).map(function (k) { return k.charAt(0).toUpperCase() + k.slice(1); })
+      .concat(Object.keys(this.selCats).map(function (k) { return CATS.filter(function (c) { return c.key === k; })[0].name.toLowerCase(); })
+      .concat(Object.keys(this.selTypes).map(function (k) { return k.split("||")[1]; })
+      .concat(Object.keys(this.selStrains).map(function (k) { return self.selStrains[k]; }))));
+    var what = picks.length ? picks.slice(0, 2).join(" + ") + (picks.length > 2 ? " + " + (picks.length - 2) + " more" : "")
+      : (this.brandSel.value || "our products");
     this.status.innerHTML = "";
     if (nq) {
       this.status.appendChild(el("span", {}, [el("b", { text: rows.length + (rows.length === 1 ? " store" : " stores") }),
@@ -455,10 +847,10 @@
         el("a", { href: "#", text: "Show all", onclick: function (e) { e.preventDefault(); self.q.value = ""; self.nameQuery = ""; self.render(true); } })]));
     } else if (o) {
       this.status.appendChild(el("span", {}, [el("b", { text: rows.length + (rows.length === 1 ? " store" : " stores") }),
-        " carrying " + what + (radius ? " within " + radius + " mi of " : " near ") + o.label]));
+        " carrying " + what + (radius ? " within " + radius + " mi of " : " near ") + o.label + (widened ? " (nothing closer)" : "")]));
     } else {
       this.status.appendChild(el("span", {}, [el("b", { text: rows.length + (rows.length === 1 ? " store" : " stores") }),
-        " carrying " + what + ". Enter a ZIP to sort by distance."]));
+        " carrying " + what + ". ", el("a", { href: "#", text: "Show stores near me", onclick: function (e) { e.preventDefault(); self.locate(); } })]));
     }
 
     // list
@@ -472,7 +864,7 @@
       this.list.appendChild(el("div", { class: "pl-empty" }, [msg]));
     }
 
-    var b = this.brandSel.value, t = this.prodSel.value, v = this.varSel.value;
+    var b = this.brandSel.value, nT = count(this.selTypes), nS = count(this.selStrains);
     rows.forEach(function (r) {
       var s = r.s;
       var carried = s.products.map(function (x) { return self.prodById[x]; }).filter(function (p) {
@@ -483,7 +875,7 @@
       function drawChips(n) {
         chips.innerHTML = "";
         carried.slice(0, n).forEach(function (p) {
-          chips.appendChild(el("span", { class: "pl-chip", text: v && !t ? (b ? p.type : p.brand + " " + p.type.replace(new RegExp("^" + p.brand + "\\s*"), "")) : t && p.variant ? p.variant : p.name }));
+          chips.appendChild(el("span", { class: "pl-chip", text: nS === 1 && !nT ? p.type : nT === 1 && !nS && p.variant ? p.variant : p.name }));
         });
         if (carried.length > n) chips.appendChild(el("span", { class: "pl-chip pl-more", text: "+" + (carried.length - n) + " more",
           onclick: function (e) { e.stopPropagation(); drawChips(carried.length); } }));
@@ -492,19 +884,30 @@
 
       var full = s.address + ", " + s.city + ", " + s.state + " " + s.zip;
       var dir = "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(s.name + ", " + full);
+      var act = function (what) { return function (e) { e.stopPropagation(); self.track("locator_store_action", { action: what, store_name: s.name, store_city: s.city }); }; };
       var links = el("div", { class: "pl-links" }, [
-        el("a", { href: dir, target: "_blank", rel: "noopener", text: "Directions", onclick: function (e) { e.stopPropagation(); } }),
-        s.phone ? el("a", { href: "tel:" + s.phone.replace(/[^\d+]/g, ""), text: fmtPhone(s.phone), onclick: function (e) { e.stopPropagation(); } }) : null,
-        s.website ? el("a", { href: /^https?:/.test(s.website) ? s.website : "https://" + s.website, target: "_blank", rel: "noopener", text: "Website", onclick: function (e) { e.stopPropagation(); } }) : null
+        el("a", { href: dir, target: "_blank", rel: "noopener", text: "Directions", onclick: act("directions") }),
+        s.phone ? el("a", { href: "tel:" + s.phone.replace(/[^\d+]/g, ""), text: fmtPhone(s.phone), onclick: act("call") }) : null,
+        s.website ? el("a", { href: /^https?:/.test(s.website) ? s.website : "https://" + s.website, target: "_blank", rel: "noopener", text: "Website", onclick: act("website") }) : null
       ]);
+      var lo = s.last_order ? new Date(s.last_order + "T12:00:00") : null;
+      var badge = r.recent ? el("span", { class: "pl-recent", title: "Last order " + lo.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+        html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Recently stocked' }) : null;
       var card = el("div", { class: "pl-card", tabindex: "0", "data-id": s.id }, [
         el("div", { class: "pl-top" }, [el("p", { class: "pl-name", text: s.name }),
           r.d != null ? el("span", { class: "pl-dist", text: r.d.toFixed(r.d < 10 ? 1 : 0) + " mi" }) : null]),
         el("div", { class: "pl-addr", text: full }),
+        badge,
         carried.length ? chips : null,
         links
       ]);
-      card.addEventListener("click", function () { self.focus(s.id, true); });
+      card.addEventListener("click", function () {
+        if (self.isPhone() && self.view !== "map") {
+          self.setView("map");
+          setTimeout(function () { self.map.invalidateSize(); self.focus(s.id, true); }, 80);   // let the map size itself first
+          self.mapEl.scrollIntoView({ block: "start", behavior: "smooth" });
+        } else self.focus(s.id, true);
+      });
       card.addEventListener("keydown", function (e) { if (e.key === "Enter") self.focus(s.id, true); });
       self.list.appendChild(card);
 
@@ -524,12 +927,16 @@
       var m = L.marker([s.lat, s.lng], {
         icon: L.divIcon({ className: "pl-pin-wrap", html: pin, iconSize: [w, 34], iconAnchor: [w / 2, 17], popupAnchor: [0, -16] }),
         title: s.name, riseOnHover: true
-      }).bindPopup('<div class="pl-pop"><b></b><span></span></div>', { minWidth: 200, maxWidth: 260 });
-      m.on("popupopen", function (e) {
-        var c = e.popup.getElement();
-        c.querySelector("b").textContent = s.name;
-        c.querySelector("span").textContent = s.address + ", " + s.city;
-      });
+      }).bindPopup(function () {
+        return el("div", { class: "pl-pop" }, [
+          el("b", { text: s.name }), el("span", { text: s.address + ", " + s.city }),
+          r.recent ? el("div", { class: "pl-recent pl-recent-sm", text: "Recently stocked" }) : null,
+          el("div", { class: "pl-pop-links" }, [
+            el("a", { href: dir, target: "_blank", rel: "noopener", text: "Directions", onclick: act("directions") }),
+            s.phone ? el("a", { href: "tel:" + s.phone.replace(/[^\d+]/g, ""), text: "Call", onclick: act("call") }) : null
+          ])
+        ]);
+      }, { minWidth: 200, maxWidth: 260 });
       m.on("click", function () { self.focus(s.id, false); });
       m.addTo(self.layer);
       self.markers[s.id] = { m: m, card: card };
@@ -553,7 +960,10 @@
 
   // Product photo / brand logo for the current selection
   Locator.prototype.renderFeature = function () {
-    var d = this.data, b = this.brandSel.value, t = this.prodSel.value, v = this.varSel.value;
+    var d = this.data, b = this.brandSel.value;
+    var tk = Object.keys(this.selTypes), sk = Object.keys(this.selStrains);
+    if (tk.length > 1 || sk.length > 1 || count(this.selCats) || count(this.selClass)) { this.feat.hidden = true; return; }   // tiles already show the picks
+    var t = tk[0] || "", v = sk[0] || "";
     var ok = this.wanted(), ps = ok ? d.products.filter(function (p) { return ok[p.id]; }) : [];
     var img = "", title = "", sub = "", imgs = null;
     var withImg = ps.filter(function (p) { return p.image; })[0];
@@ -604,6 +1014,27 @@
     }
     this.feat.appendChild(el("div", {}, [el("div", { class: "pl-ft", text: title }), sub ? el("div", { class: "pl-fs", text: sub }) : null]));
     this.feat.hidden = false;
+  };
+
+  // Keep the page address in step with the filters, so any view can be shared
+  Locator.prototype.writeUrl = function () {
+    if (!this.updateUrl || !window.history || !history.replaceState) return;
+    try {
+      var self = this, p = new URLSearchParams(location.search);
+      ["brand", "type", "product", "strain", "kind", "near", "store", "radius", "sort", "tab"].forEach(function (k) { p.delete(k); });
+      if (this.brandSel.value) p.set("brand", this.brandSel.value);
+      Object.keys(this.selCats).forEach(function (k) { p.append("type", k); });
+      Object.keys(this.selTypes).forEach(function (k) { p.append("product", k.split("||")[1]); });
+      Object.keys(this.selStrains).forEach(function (k) { p.append("strain", self.selStrains[k]); });
+      Object.keys(this.selClass).forEach(function (k) { p.append("kind", k); });
+      if (this.nameQuery) p.set("store", this.q.value.trim());
+      else if (this.origin && this.origin.query) p.set("near", this.origin.query);
+      if (this.radiusSel.value !== "25") p.set("radius", this.radiusSel.value);
+      if (this.sortSel.value === "recent") p.set("sort", "recent");
+      if (this.tab === "strain") p.set("tab", "strain");
+      var qs = p.toString(), next = location.pathname + (qs ? "?" + qs : "") + location.hash;
+      if (next !== location.pathname + location.search + location.hash) history.replaceState(history.state, "", next);
+    } catch (e) { /* e.g. sandboxed preview */ }
   };
 
   Locator.prototype.focus = function (id, fromList) {

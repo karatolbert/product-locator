@@ -26,8 +26,23 @@ Links can also preselect filters, which is handy for Instagram bios and posts:
 
 ## Versions
 
-- `docs/locator.js` is the live widget (v2: brand-logo row, Oil Twists as its own brand).
-- `docs/locator-v1.js` is the earlier dropdown version, kept as a backup. To go back, point the embed's script at `locator-v1.js`.
+- `docs/locator.js` is the live widget (v3): brand-logo row, location search on top, Shop by Product / Strain picture tiles with multi-select, Type and Strain type checklists, shareable links, "Recently stocked" (shipped within 10 days), phone List / Map switch, distance-first start, Google Analytics events.
+- `docs/locator-v2.js`: previous version (logo row with Product / Strain dropdowns).
+- `docs/locator-v1.js`: first version (all dropdowns).
+
+To go back, point the embed's script at one of the older files.
+
+### Embed options (on the `<div>`)
+
+- `data-accent="#1a1a1a"`: button and highlight colour.
+- `data-brand="Sesh"` / `data-strain="Churroz"`: open with a brand or strain selected.
+- `data-recent-days="10"`: how recent a shipped order must be for "Recently stocked".
+- `data-brand-order="Oil, Oil Twists, Sesh, ..."`: order of the logo row.
+- `data-update-url="false"`: stop the page address from following the filters.
+
+### Analytics
+
+If Google Analytics 4 (or Tag Manager) is on the page, the locator sends: `locator_search`, `locator_filter`, `locator_location`, `locator_sort`, `locator_view`, `locator_store_action`.
 
 ## Settings (`config.json`)
 
