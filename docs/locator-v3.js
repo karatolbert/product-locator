@@ -113,7 +113,7 @@
     ".pl-ticn{flex:none;width:24px;height:24px;color:#333}.pl-ticn svg{width:24px;height:24px}",
     ".pl-types-h2{margin-top:10px;border-top:1px solid var(--pl-line);padding-top:14px}",
     ".pl-cdot{flex:none;width:12px;height:12px;border-radius:50%;margin:0 6px}",
-    ".pl-ctag{position:absolute;top:7px;left:7px;font-size:10px;font-weight:700;letter-spacing:.03em;color:#fff;border-radius:999px;padding:2px 7px;z-index:1}",
+    ".pl-ctag{align-self:center;font-size:10px;font-weight:700;letter-spacing:.03em;color:#fff;border-radius:999px;padding:2px 7px;margin-right:2px;line-height:1.4}",
     ".pl-ph{display:flex;align-items:center;gap:10px;padding:10px 16px;flex-wrap:wrap}",
     ".pl-tabs{display:inline-flex;background:var(--pl-soft);border:1px solid var(--pl-line);border-radius:999px;padding:3px}",
     ".pl-tab{border:0;background:none;font:inherit;font-size:14px;font-weight:600;color:var(--pl-muted);padding:7px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}",
@@ -591,12 +591,13 @@
     function tile(selected, img, name, sub, onclick, icon, minis, cls) {
       var t = el("button", { type: "button", class: "pl-tile" + (selected ? " pl-sel" : ""), "aria-pressed": String(!!selected), title: name, onclick: onclick }, [
         el("span", { class: "pl-check", html: CHECK }),
-        cls ? el("span", { class: "pl-ctag", text: cls.charAt(0).toUpperCase() + cls.slice(1),
-          style: "background:" + (CLASSES.filter(function (c) { return c.key === cls; })[0] || {}).color }) : null,
         icon ? el("span", { class: "pl-ti pl-ticon", html: icon })
           : img ? el("img", { class: "pl-ti", src: resolve(img), alt: "", loading: "lazy" }) : el("span", { class: "pl-ti" }),
         el("span", { class: "pl-tn", text: name }),
-        minis && minis.length ? el("span", { class: "pl-mini", html: minis.map(function (k) { return '<span title="' + k[1] + '">' + ICONS[k[0]] + "</span>"; }).join("") }) : null,
+        (minis && minis.length) || cls ? el("span", { class: "pl-mini", html:
+          (cls ? '<span class="pl-ctag" style="background:' + ((CLASSES.filter(function (c) { return c.key === cls; })[0] || {}).color || "#888") + '">' +
+            cls.charAt(0).toUpperCase() + cls.slice(1) + "</span>" : "") +
+          (minis || []).map(function (k) { return '<span title="' + k[1] + '">' + ICONS[k[0]] + "</span>"; }).join("") }) : null,
         sub ? el("span", { class: "pl-tb", text: sub }) : null
       ]);
       var im = t.querySelector("img"); if (im) im.onerror = function () { im.style.visibility = "hidden"; };
@@ -698,7 +699,7 @@
     this.renderPicker();
 
     // status line
-    var picks = Object.keys(this.selClass).map(function (k) { return k; })
+    var picks = Object.keys(this.selClass).map(function (k) { return k.charAt(0).toUpperCase() + k.slice(1); })
       .concat(Object.keys(this.selCats).map(function (k) { return CATS.filter(function (c) { return c.key === k; })[0].name.toLowerCase(); })
       .concat(Object.keys(this.selTypes).map(function (k) { return k.split("||")[1]; })
       .concat(Object.keys(this.selStrains).map(function (k) { return self.selStrains[k]; }))));
