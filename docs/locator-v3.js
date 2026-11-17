@@ -287,7 +287,7 @@
       kinds: params.getAll("kind"), near: params.get("near") || "", store: params.get("store") || "",
       radius: params.get("radius") || "", sort: params.get("sort") || "", tab: params.get("tab") || ""
     };
-    this.recentDays = parseInt(root.getAttribute("data-recent-days"), 10) || 21;
+    this.recentDays = parseInt(root.getAttribute("data-recent-days"), 10) || 10;
     this.updateUrl = root.getAttribute("data-update-url") !== "false";
     this.view = "list";
     this.build();
