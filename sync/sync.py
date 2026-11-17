@@ -301,6 +301,7 @@ def main():
             "brand": bname or "Other",
             "sku": clean(p.get("sku")),
             "image_count": p.get("image_count") or 0,
+            "cls": (p.get("strain_classification") or "").lower(),
             "modified": p.get("modified") or p.get("last_edit") or "",
         }
     cust_by_id = {c["id"]: c for c in customers if c.get("id") is not None}
@@ -448,7 +449,10 @@ def main():
         if key not in out_by_key:
             ptype, _, variant = p["name"].partition(" - ")
             out_by_key[key] = {"id": key, "brand": p["brand"], "type": ptype.strip(),
-                               "variant": variant.strip(), "name": p["name"]}
+                               "variant": variant.strip(), "name": p["name"], "_cls": {}}
+        if p.get("cls") in ("indica", "sativa", "hybrid"):
+            t = out_by_key[key]["_cls"]
+            t[p["cls"]] = t.get(p["cls"], 0) + 1
     # --- combine product types into one product (config: product_groups)
     group_of = {}
     for new, olds in (cfg.get("product_groups") or {}).items():
@@ -517,6 +521,19 @@ def main():
         if not v.get("image"):
             v["image"] = type_img.get((v["brand"], v["type"]), "")
     with_img = sum(1 for v in out_by_key.values() if v["image"])
+
+    # Strain type: the most common indica/sativa/hybrid tag on the product's listings,
+    # then shared across every product with the same strain name in that brand.
+    by_strain = {}
+    for v in out_by_key.values():
+        if v["variant"]:
+            t = by_strain.setdefault((v["brand"], v["variant"].lower()), {})
+            for k, n in v["_cls"].items():
+                t[k] = t.get(k, 0) + n
+    for v in out_by_key.values():
+        tally = v["_cls"] or (by_strain.get((v["brand"], v["variant"].lower()), {}) if v["variant"] else {})
+        v["class"] = max(tally, key=tally.get) if tally else ""
+        del v["_cls"]
 
     out_products = sorted(out_by_key.values(),
                           key=lambda p: (p["brand"].lower(), p["type"].lower(), p["variant"].lower()))

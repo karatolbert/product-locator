@@ -509,12 +509,12 @@
     return '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">' + body + "</svg>";
   }
   var ICONS = {
-    cart: svg('<path d="M26 15v-4.5a6 6 0 0 1 12 0V15"/><path d="M24.5 15h15"/><rect x="23" y="15" width="18" height="29" rx="4"/><rect x="26" y="30" width="12" height="11" rx="2" fill="currentColor" opacity=".22" stroke="none"/><path d="M26 30h12"/><path d="M26.5 44v12h11V44"/><path d="M26.5 49h11M26.5 52.5h11"/>'),
+    cart: svg('<path d="M25.5 15v-4.5a6.5 6.5 0 0 1 13 0V15"/><rect x="25.5" y="15" width="13" height="29" rx="3"/><rect x="28" y="30" width="8" height="11" rx="1.5" fill="currentColor" opacity=".22" stroke="none"/><path d="M28 30h8"/><path d="M27.5 44v12h9V44"/><path d="M27.5 49h9M27.5 52.5h9"/>'),
     aio: svg('<path d="M25 5.5h14l2 9H23z"/><rect x="15" y="14.5" width="34" height="44" rx="6"/><rect x="25.5" y="22" width="13" height="18" rx="3"/><rect x="27.5" y="31" width="9" height="7" rx="1.5" fill="currentColor" opacity=".22" stroke="none"/><circle cx="32" cy="49.5" r="2.4"/>'),
     pack: svg('<rect x="8" y="16" width="48" height="40" rx="5"/><path d="M8 24h48"/>' +
       '<rect x="14" y="30" width="6" height="18" rx="2"/><rect x="24" y="30" width="6" height="18" rx="2"/>' +
       '<rect x="34" y="30" width="6" height="18" rx="2"/><rect x="44" y="30" width="6" height="18" rx="2"/><path d="M22 10h20"/>'),
-    preroll: svg('<path d="M27.5 48 20 19M36.5 48 44 19"/><rect x="27" y="48" width="10" height="10" rx="2"/><path d="M27 52h10"/><path d="M20 19c2.5-4 7-7.5 10.5-10M44 19c-2.5-4-7-7.5-10.5-10"/><path d="M30.5 9c.8 1 2.2 1 3 0"/><path d="M30.5 9c-1.5-2.5 4.5-2.8 2.6-5.4-.8-1.1-.4-2.6 1.2-3"/>'),
+    preroll: svg('<path d="M28.5 48 23 19M35.5 48 41 19"/><rect x="28" y="48" width="8" height="10" rx="2"/><path d="M28 52h8"/><path d="M23 19c2-4 5.2-7.3 7.8-10M41 19c-2-4-5.2-7.3-7.8-10"/><path d="M30.8 9c.7.9 1.7.9 2.4 0"/><path d="M30.8 9c-1.5-2.5 4.5-2.8 2.6-5.4-.8-1.1-.4-2.6 1.2-3"/>'),
     battery: svg('<path d="M28 9V4h8v5"/><rect x="25" y="9" width="14" height="50" rx="5"/><circle cx="32" cy="21" r="3"/>' +
       '<path d="M29 48h6M29 52h6" opacity=".7"/>'),
     syringe: svg('<path d="M23 5h18M32 5v10"/><rect x="25" y="15" width="14" height="32" rx="2.5"/>' +
