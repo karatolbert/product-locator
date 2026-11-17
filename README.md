@@ -36,6 +36,7 @@ To go back, point the embed's script at one of the older files.
 
 - `data-accent="#1a1a1a"`: button and highlight colour.
 - `data-brand="Sesh"` / `data-strain="Churroz"`: open with a brand or strain selected.
+- `data-brands="Sesh"`: brand websites. Shows only that brand (the logo row is hidden). Several brands work too: `data-brands="Oil, Oil Twists"` shows a logo row with just those.
 - `data-recent-days="10"`: how recent a shipped order must be for "Recently stocked".
 - `data-brand-order="Oil, Oil Twists, Sesh, ..."`: order of the logo row.
 - `data-update-url="false"`: stop the page address from following the filters.

@@ -84,6 +84,7 @@
     ".pl{--pl-accent:#1a1a1a;--pl-line:#e3e3e3;--pl-muted:#6b6b6b;--pl-bg:#fff;--pl-soft:#f6f6f4;",
     "font-family:inherit;color:#1a1a1a;background:var(--pl-bg);border:1px solid var(--pl-line);border-radius:14px;overflow:hidden;line-height:1.4;font-size:15px;text-align:left}",
     ".pl *{box-sizing:border-box}",
+    ".pl.pl-one-brand .pl-rail{display:none}",
     ".pl-head{background:var(--pl-soft);border-bottom:1px solid var(--pl-line)}",
     ".pl-rail{display:flex;gap:18px;padding:16px 16px 4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}",
     ".pl-rail::-webkit-scrollbar{display:none}",
@@ -246,6 +247,21 @@
     if (!d.strain_images["Oil Twists"]) d.strain_images["Oil Twists"] = d.strain_images["Oil"] || {};
   }
 
+  // Brand websites: data-brands="Sesh" (or "Oil, Oil Twists") shows only those brands.
+  function lockBrands(d, list) {
+    if (!list) return;
+    var want = list.split(",").map(function (x) { return norm(x); }).filter(Boolean);
+    var keep = d.brands.filter(function (b) { return want.indexOf(norm(b)) >= 0; });
+    if (!keep.length) return;   // misspelt brand: show everything rather than nothing
+    var ok = {};
+    d.products = d.products.filter(function (p) { if (keep.indexOf(p.brand) >= 0) { ok[p.id] = 1; return true; } return false; });
+    d.stores = d.stores.map(function (s) {
+      var ps = s.products.filter(function (x) { return ok[x]; });
+      return ps.length ? Object.assign({}, s, { products: ps }) : null;
+    }).filter(Boolean);
+    d.brands = keep;
+  }
+
   // Brand order on the logo row (others follow alphabetically). data-brand-order="Oil, Sesh, ..." overrides.
   var BRAND_ORDER = ["Oil", "Oil Twists", "Sesh", "Panacea", "Wisenheimer", "Boost!"];
   function orderBrands(d, custom) {
@@ -372,6 +388,9 @@
       self.data = res[0];
       splitTwists(self.data);
       orderBrands(self.data, self.root.getAttribute("data-brand-order"));
+      lockBrands(self.data, self.root.getAttribute("data-brands"));
+      self.locked = self.data.brands.length === 1 ? self.data.brands[0] : "";
+      if (self.locked) self.root.classList.add("pl-one-brand");
       self.prodById = {};
       self.data.products.forEach(function (p) { self.prodById[p.id] = p; });
       self.initMap();
@@ -422,6 +441,7 @@
   };
 
   Locator.prototype.renderRail = function () {
+    if (this.locked) { this.rail.innerHTML = ""; return; }
     var self = this, cur = this.brandSel.value, imgs = this.data.brand_images || {};
     this.rail.innerHTML = "";
     this.rail.classList.toggle("pl-has-sel", !!cur);
@@ -445,6 +465,7 @@
     d.brands.forEach(function (b) { s.appendChild(el("option", { value: b, text: b })); });
     var want = d.brands.filter(function (b) { return norm(b) === norm(self.initBrand); })[0];
     if (want) s.value = want;
+    if (this.locked) { s.value = this.locked; want = this.locked; }
     var q = norm(this.initProduct);
     if (q) {
       var p = d.products.filter(function (p) { return p.id === q || norm(p.name) === q; })[0];
