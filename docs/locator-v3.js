@@ -98,6 +98,8 @@
     ".pl-rail.pl-has-sel .pl-logo:not(.pl-sel):hover .pl-lc{opacity:.9;filter:none}",
     ".pl-all{background:var(--pl-accent);color:#fff;font-weight:700;font-size:15px;letter-spacing:.02em}",
     ".pl-bar{display:grid;grid-template-columns:1fr 120px;gap:10px;padding:12px 16px 12px}",
+    ".pl-bar-top{padding:16px 16px 6px;border-bottom:1px solid var(--pl-line);background:#fff}",
+    ".pl-bar-top+.pl-rail{padding-top:16px;padding-bottom:12px}",
     ".pl-pick{border-top:1px solid var(--pl-line);background:#fff;display:grid;grid-template-columns:214px 1fr}",
     ".pl-pmain{min-width:0;display:flex;flex-direction:column}",
     ".pl-types{border-right:1px solid var(--pl-line);padding:12px 10px 14px 14px;display:flex;flex-direction:column;gap:2px}",
@@ -326,7 +328,7 @@
     this.radiusSel.value = "25";
 
     this.feat = el("div", { class: "pl-feat", hidden: "" });
-    this.status = el("div", { class: "pl-status", "aria-live": "polite", text: "Loading stores…" });
+    this.status = el("div", { class: "pl-status", "aria-live": "polite", text: "Loading stores\u2026" });
     this.sortSel = el("select", { class: "pl-sort", "aria-label": "Sort stores", onchange: function () {
       self.track("locator_sort", { sort: self.sortSel.value }); self.render(false); } });
     [["near", "Nearest first"], ["recent", "Recently stocked"]].forEach(function (o) { self.sortSel.appendChild(el("option", { value: o[0], text: o[1] })); });
@@ -343,12 +345,13 @@
     this.foot = el("div", { class: "pl-foot" });
 
     this.rail = el("div", { class: "pl-rail", role: "group", "aria-label": "Filter by brand" });
+    // Where first (location), then what (brand \u2192 type / product / strain)
     r.appendChild(el("div", { class: "pl-head" }, [
-      this.rail,
-      el("div", { class: "pl-bar" }, [
+      el("div", { class: "pl-bar pl-bar-top" }, [
         el("div", { class: "pl-search" }, [this.q, go, me]),
         this.radiusSel
       ]),
+      this.rail,
       this.buildPicker()
     ]));
     r.appendChild(this.note);
@@ -666,7 +669,7 @@
     this.clearBtn.hidden = !(nc || nt || ns || count(this.selClass));
     this.renderTypes();
     var closed = this.pick.classList.contains("pl-closed");
-    this.toggleBtn.textContent = closed ? "Show options ▾" : "Hide ▴";
+    this.toggleBtn.textContent = closed ? "Show options \u25be" : "Hide \u25b4";
     if (closed) return;
 
     var grid = this.grid; grid.innerHTML = "";
@@ -702,7 +705,7 @@
         var img = (d.type_images || {})[o.type] || (withImg ? withImg.image : "") || (d.brand_images || {})[o.brand];
         var label = o.type.replace(new RegExp("^" + o.brand.replace(/[.*+?^${}()|[\]\\!]/g, "\\$&") + "\\s+"), "");
         var n = o.items.filter(isStrain).length;
-        tile(self.selTypes[o.key], img, label, (b ? "" : o.brand) + (n ? (b ? "" : " · ") + n + (n === 1 ? " strain" : " strains") : ""), function () {
+        tile(self.selTypes[o.key], img, label, (b ? "" : o.brand) + (n ? (b ? "" : " \u00b7 ") + n + (n === 1 ? " strain" : " strains") : ""), function () {
           if (self.selTypes[o.key]) delete self.selTypes[o.key]; else self.selTypes[o.key] = true;
           self.track("locator_filter", { filter: "product", value: o.type, action: self.selTypes[o.key] ? "add" : "remove" });
           self.refresh(); self.render(true);
@@ -751,13 +754,13 @@
         return;
       }
     }
-    this.status.textContent = "Finding " + q + "…";
+    this.status.textContent = "Finding " + q + "\u2026";
     geocode(q).then(function (o) {
       o.query = q.trim(); self.origin = o; self.autoRadius = true; self.render(true);
       store("last", { near: o.query });
       self.track("locator_search", { search_term: o.query, search_kind: /^\d{5}$/.test(o.query) ? "zip" : "city", results: self.lastCount });
     }).catch(function () {
-      self.status.textContent = "We couldn't find “" + q + "”. Try a 5-digit ZIP code.";
+      self.status.textContent = "We couldn't find \u201c" + q + "\u201d. Try a 5-digit ZIP code.";
       self.track("locator_search", { search_term: q.trim(), search_kind: "not_found", results: 0 });
     });
   };
@@ -765,7 +768,7 @@
   Locator.prototype.locate = function (quiet) {
     var self = this;
     if (!navigator.geolocation) { if (!quiet) this.status.textContent = "Your browser can't share location. Try a ZIP code."; return; }
-    if (!quiet) this.status.textContent = "Finding your location…";
+    if (!quiet) this.status.textContent = "Finding your location\u2026";
     store("asked", 1);
     navigator.geolocation.getCurrentPosition(function (p) {
       self.origin = { lat: p.coords.latitude, lng: p.coords.longitude, label: "your location" };
