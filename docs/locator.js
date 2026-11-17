@@ -118,9 +118,13 @@
     ".pl-links a{color:var(--pl-accent);text-decoration:underline;text-underline-offset:2px}",
     ".pl-map{min-height:0;z-index:0}",
     ".pl .leaflet-tile-pane{filter:grayscale(.85) brightness(1.04) contrast(.92)}",
-    ".pl-pin{width:34px;height:34px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);overflow:hidden;background:var(--pl-accent);transition:transform .15s}",
-    ".pl-pin img{width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.55)}",
-    ".pl-pin.pl-on{transform:scale(1.35);box-shadow:0 2px 8px rgba(0,0,0,.45)}",
+    ".pl-pin{display:flex;align-items:center;justify-content:center;width:100%;height:100%;transition:transform .15s}",
+    ".pl-dot{flex:none;width:34px;height:34px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);overflow:hidden;background:var(--pl-accent);position:relative}",
+    ".pl-pin.pl-multi .pl-dot{width:28px;height:28px}",
+    ".pl-pin.pl-multi .pl-dot+.pl-dot{margin-left:-11px}",
+    ".pl-dot img{width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.55)}",
+    ".pl-pin.pl-on{transform:scale(1.3)}",
+    ".pl-pin.pl-on .pl-dot{box-shadow:0 2px 8px rgba(0,0,0,.45)}",
     ".pl-pin-wrap{background:none;border:0}",
     ".pl-empty{padding:30px 20px;text-align:center;color:var(--pl-muted)}",
     ".pl-foot{padding:9px 16px;font-size:12px;color:var(--pl-muted);border-top:1px solid var(--pl-line);background:var(--pl-soft)}",
@@ -419,15 +423,23 @@
       card.addEventListener("keydown", function (e) { if (e.key === "Enter") self.focus(s.id, true); });
       self.list.appendChild(card);
 
-      var counts = {}, top = null;
-      carried.forEach(function (p) { counts[p.brand] = (counts[p.brand] || 0) + 1; if (!top || counts[p.brand] > counts[top]) top = p.brand; });
-      var logo = top ? (self.data.brand_images || {})[top] : "";
-      if (logo && !/^(https?:|data:)/.test(logo)) logo = scriptBase + logo;
-      var pin = '<div class="pl-pin">' + (logo ? '<img alt="" src="' + logo.replace(/"/g, "&quot;") + '">' : "") + "</div>";
+      // one logo per brand the store carries (most-carried first, up to 3)
+      var counts = {};
+      carried.forEach(function (p) { counts[p.brand] = (counts[p.brand] || 0) + 1; });
+      var brandsHere = Object.keys(counts).sort(function (a, c) { return counts[c] - counts[a]; }).slice(0, 3);
+      var dots = brandsHere.map(function (br, i) {
+        var logo = (self.data.brand_images || {})[br] || "";
+        if (logo && !/^(https?:|data:)/.test(logo)) logo = scriptBase + logo;
+        return '<div class="pl-dot" style="z-index:' + (3 - i) + '" title="' + br.replace(/"/g, "&quot;") + '">' +
+          (logo ? '<img alt="" src="' + logo.replace(/"/g, "&quot;") + '">' : "") + "</div>";
+      });
+      if (!dots.length) dots = ['<div class="pl-dot"></div>'];
+      var n = dots.length, w = n === 1 ? 34 : 28 + (n - 1) * 17;
+      var pin = '<div class="pl-pin' + (n > 1 ? " pl-multi" : "") + '">' + dots.join("") + "</div>";
       var m = L.marker([s.lat, s.lng], {
-        icon: L.divIcon({ className: "pl-pin-wrap", html: pin, iconSize: [34, 34], iconAnchor: [17, 17], popupAnchor: [0, -16] }),
+        icon: L.divIcon({ className: "pl-pin-wrap", html: pin, iconSize: [w, 34], iconAnchor: [w / 2, 17], popupAnchor: [0, -16] }),
         title: s.name, riseOnHover: true
-      }).bindPopup('<div class="pl-pop"><b></b><span></span></div>');
+      }).bindPopup('<div class="pl-pop"><b></b><span></span></div>', { minWidth: 200, maxWidth: 260 });
       m.on("popupopen", function (e) {
         var c = e.popup.getElement();
         c.querySelector("b").textContent = s.name;
