@@ -122,7 +122,7 @@
     ".pl-dot{flex:none;width:34px;height:34px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35);overflow:hidden;background:var(--pl-accent);position:relative}",
     ".pl-pin.pl-multi .pl-dot{width:28px;height:28px}",
     ".pl-pin.pl-multi .pl-dot+.pl-dot{margin-left:-11px}",
-    ".pl-dot img{width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.55)}",
+    ".pl-dot img{width:100%;height:100%;object-fit:cover;display:block}",
     ".pl-pin.pl-on{transform:scale(1.3)}",
     ".pl-pin.pl-on .pl-dot{box-shadow:0 2px 8px rgba(0,0,0,.45)}",
     ".pl-pin-wrap{background:none;border:0}",
