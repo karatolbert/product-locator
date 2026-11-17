@@ -533,6 +533,9 @@ def main():
     for v in out_by_key.values():
         tally = v["_cls"] or (by_strain.get((v["brand"], v["variant"].lower()), {}) if v["variant"] else {})
         v["class"] = max(tally, key=tally.get) if tally else ""
+        # Distillate flavours have no indica/sativa/hybrid tag: use the configured default
+        if not v["class"] and v["variant"] and not re.search(r"battery|variety|sampler", v["type"] + " " + v["variant"], re.I):
+            v["class"] = cfg.get("default_strain_class") or ""
         del v["_cls"]
 
     out_products = sorted(out_by_key.values(),

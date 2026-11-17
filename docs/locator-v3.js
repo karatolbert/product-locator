@@ -111,6 +111,9 @@
     ".pl-type.pl-sel .pl-tbox{background:var(--pl-accent);border-color:var(--pl-accent)}.pl-type.pl-sel .pl-tbox svg{opacity:1}",
     ".pl-type.pl-sel{font-weight:600}",
     ".pl-ticn{flex:none;width:24px;height:24px;color:#333}.pl-ticn svg{width:24px;height:24px}",
+    ".pl-types-h2{margin-top:10px;border-top:1px solid var(--pl-line);padding-top:14px}",
+    ".pl-cdot{flex:none;width:12px;height:12px;border-radius:50%;margin:0 6px}",
+    ".pl-ctag{position:absolute;top:7px;left:7px;font-size:10px;font-weight:700;letter-spacing:.03em;color:#fff;border-radius:999px;padding:2px 7px;z-index:1}",
     ".pl-ph{display:flex;align-items:center;gap:10px;padding:10px 16px;flex-wrap:wrap}",
     ".pl-tabs{display:inline-flex;background:var(--pl-soft);border:1px solid var(--pl-line);border-radius:999px;padding:3px}",
     ".pl-tab{border:0;background:none;font:inherit;font-size:14px;font-weight:600;color:var(--pl-muted);padding:7px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}",
@@ -196,7 +199,8 @@
     ".pl-types::-webkit-scrollbar{display:none}.pl-types-h{display:none}",
     ".pl-type{flex:none;border:1px solid var(--pl-line);border-radius:999px;padding:5px 11px 5px 7px;font-size:13px}",
     ".pl-type .pl-tbox{display:none}.pl-type.pl-sel{background:var(--pl-accent);border-color:var(--pl-accent);color:#fff}.pl-type.pl-sel .pl-ticn{color:#fff}",
-    ".pl-ticn,.pl-ticn svg{width:20px;height:20px}",
+    ".pl-ticn,.pl-ticn svg{width:20px;height:20px}.pl-types-h2{display:none}",
+    ".pl-type.pl-cls.pl-sel .pl-cdot{box-shadow:0 0 0 2px #fff}",
     ".pl-tab{font-size:13.5px;padding:7px 11px}",
     ".pl-bar{grid-template-columns:1fr 82px!important}.pl-bar .pl-search{grid-column:auto!important;min-width:0}",
     ".pl-search input{min-width:0}.pl-bar select{padding-right:24px;background-position:calc(100% - 15px) 18px,calc(100% - 10px) 18px}",
@@ -270,6 +274,7 @@
       html: ICON_LOC, onclick: function () { self.locate(); } });
     this.brandSel = el("select", { "aria-hidden": "true", tabindex: "-1", style: "display:none" });
     this.selCats = {};       // "cart" / "aio" / ... -> true
+    this.selClass = {};      // "indica" / "sativa" / "hybrid" -> true
     this.selTypes = {};      // "Brand||Type" -> true
     this.selStrains = {};    // normalised strain -> display name
     this.tab = "product";
@@ -400,6 +405,7 @@
       var k = p.brand + "||" + p.type;
       if (count(ss) && !(isStrain(p) && ss[norm(p.variant)]) && !self.selTypes[k]) return;
       if (count(self.selCats) && !inCats(p, self.selCats) && !self.selTypes[k]) return;
+      if (!classOk(p, self.selClass) && !self.selTypes[k]) return;
       if (!out[k]) { out[k] = { key: k, brand: p.brand, type: p.type, items: [] }; order.push(k); }
       out[k].items.push(p);
     });
@@ -410,6 +416,7 @@
     this.data.products.forEach(function (p) {
       if (b && p.brand !== b) return;
       if (count(ss) && !(isStrain(p) && ss[norm(p.variant)])) return;
+      if (!classOk(p, self.selClass)) return;
       catsOf(p.type).forEach(function (k) { (found[k] = found[k] || []).push(p); });
     });
     return CATS.filter(function (c) { return found[c.key] || self.selCats[c.key]; })
@@ -424,6 +431,7 @@
       var k = norm(p.variant);
       if (count(st) && !st[p.brand + "||" + p.type] && !self.selStrains[k]) return;
       if (count(self.selCats) && !inCats(p, self.selCats) && !self.selStrains[k]) return;
+      if (!classOk(p, self.selClass) && !self.selStrains[k]) return;
       if (!out[k]) { out[k] = { key: k, name: p.variant, items: [] }; order.push(k); }
       out[k].items.push(p);
     });
@@ -445,12 +453,13 @@
   };
 
   Locator.prototype.wanted = function () {
-    var b = this.brandSel.value, sc = this.selCats, st = this.selTypes, ss = this.selStrains;
-    if (!b && !count(sc) && !count(st) && !count(ss)) return null;
+    var self = this, b = this.brandSel.value, sc = this.selCats, st = this.selTypes, ss = this.selStrains;
+    if (!b && !count(sc) && !count(st) && !count(ss) && !count(this.selClass)) return null;
     var ok = {};
     this.data.products.forEach(function (p) {
       if (b && p.brand !== b) return;
       if (count(sc) && !inCats(p, sc)) return;
+      if (!classOk(p, self.selClass)) return;
       if (count(st) && !st[p.brand + "||" + p.type]) return;
       if (count(ss) && !(isStrain(p) && ss[norm(p.variant)])) return;
       ok[p.id] = 1;
@@ -467,7 +476,7 @@
     this.pf = el("input", { type: "search", class: "pl-pf", placeholder: "Find a product",
       oninput: function () { self.pickFilter = norm(self.pf.value); self.renderPicker(); } });
     this.clearBtn = el("button", { type: "button", class: "pl-clear", text: "Clear picks",
-      onclick: function () { self.selCats = {}; self.selTypes = {}; self.selStrains = {}; self.render(true); } });
+      onclick: function () { self.selCats = {}; self.selClass = {}; self.selTypes = {}; self.selStrains = {}; self.render(true); } });
     this.toggleBtn = el("button", { type: "button", class: "pl-toggle", onclick: function () {
       self.pick.classList.toggle("pl-closed"); self.renderPicker(); } });
     this.grid = el("div", { class: "pl-grid", role: "group" });
@@ -496,6 +505,27 @@
         el("span", { class: "pl-tbox", html: CHECK }),
         el("span", { class: "pl-ticn", html: ICONS[o.key] }),
         el("span", { class: "pl-tlabel", text: o.name })
+      ]);
+      row.querySelector("input").checked = on;
+      box.appendChild(row);
+    });
+    // Strain type
+    var have = {};
+    this.data.products.forEach(function (p) {
+      if (self.brandSel.value && p.brand !== self.brandSel.value) return;
+      if (isStrain(p) && p["class"]) have[p["class"]] = 1;
+    });
+    var cl = CLASSES.filter(function (c) { return have[c.key] || self.selClass[c.key]; });
+    if (cl.length) box.appendChild(el("div", { class: "pl-types-h pl-types-h2", text: "Strain type" }));
+    cl.forEach(function (c) {
+      var on = !!self.selClass[c.key];
+      var row = el("label", { class: "pl-type pl-cls" + (on ? " pl-sel" : "") }, [
+        el("input", { type: "checkbox", onchange: function () {
+          if (self.selClass[c.key]) delete self.selClass[c.key]; else self.selClass[c.key] = true;
+          self.render(true); } }),
+        el("span", { class: "pl-tbox", html: CHECK }),
+        el("span", { class: "pl-cdot", style: "background:" + c.color }),
+        el("span", { class: "pl-tlabel", text: c.name })
       ]);
       row.querySelector("input").checked = on;
       box.appendChild(row);
@@ -530,6 +560,12 @@
     { key: "battery", name: "Batteries", test: function (t) { return /battery/i.test(t); } },
     { key: "syringe", name: "Syringes", test: function (t) { return /syringe/i.test(t); } }
   ];
+  var CLASSES = [
+    { key: "indica", name: "Indica", color: "#6b4fa0" },
+    { key: "sativa", name: "Sativa", color: "#e0662b" },
+    { key: "hybrid", name: "Hybrid", color: "#2f8f5b" }
+  ];
+  function classOk(p, sel) { return !count(sel) || (isStrain(p) && !!sel[p["class"]]); }
   function catsOf(type) { return CATS.filter(function (c) { return c.test(type); }).map(function (c) { return c.key; }); }
   function inCats(p, sel) { return catsOf(p.type).some(function (k) { return sel[k]; }); }
   function iconFor(type) { var k = catsOf(type)[0]; return k ? ICONS[k] : ""; }
@@ -545,16 +581,18 @@
       x[0].classList.toggle("pl-sel", me.tab === x[3]);
     });
     this.pf.placeholder = this.tab === "product" ? "Find a product" : "Find a strain";
-    this.clearBtn.hidden = !(nc || nt || ns);
+    this.clearBtn.hidden = !(nc || nt || ns || count(this.selClass));
     this.renderTypes();
     var closed = this.pick.classList.contains("pl-closed");
     this.toggleBtn.textContent = closed ? "Show options ▾" : "Hide ▴";
     if (closed) return;
 
     var grid = this.grid; grid.innerHTML = "";
-    function tile(selected, img, name, sub, onclick, icon, minis) {
+    function tile(selected, img, name, sub, onclick, icon, minis, cls) {
       var t = el("button", { type: "button", class: "pl-tile" + (selected ? " pl-sel" : ""), "aria-pressed": String(!!selected), title: name, onclick: onclick }, [
         el("span", { class: "pl-check", html: CHECK }),
+        cls ? el("span", { class: "pl-ctag", text: cls.charAt(0).toUpperCase() + cls.slice(1),
+          style: "background:" + (CLASSES.filter(function (c) { return c.key === cls; })[0] || {}).color }) : null,
         icon ? el("span", { class: "pl-ti pl-ticon", html: icon })
           : img ? el("img", { class: "pl-ti", src: resolve(img), alt: "", loading: "lazy" }) : el("span", { class: "pl-ti" }),
         el("span", { class: "pl-tn", text: name }),
@@ -598,10 +636,11 @@
         var kinds = {}, minis = [];
         o.items.forEach(function (p) { var k = catsOf(p.type).filter(function (x) { return x !== "pack"; })[0] || catsOf(p.type)[0];
           if (k && !kinds[k]) { kinds[k] = 1; minis.push([k, CATS.filter(function (c) { return c.key === k; })[0].name]); } });
+        var cls = (o.items.filter(function (p) { return p["class"]; })[0] || {})["class"];
         tile(self.selStrains[o.key], art || logo, o.name, b ? "" : bl.join(", "), function () {
           if (self.selStrains[o.key]) delete self.selStrains[o.key]; else self.selStrains[o.key] = o.name;
           self.refresh(); self.render(true);
-        }, "", minis);
+        }, "", minis, cls);
       });
       if (!sopts.length) grid.appendChild(el("div", { class: "pl-gempty", text: "No strains match." }));
     }
@@ -659,9 +698,10 @@
     this.renderPicker();
 
     // status line
-    var picks = Object.keys(this.selCats).map(function (k) { return CATS.filter(function (c) { return c.key === k; })[0].name.toLowerCase(); })
+    var picks = Object.keys(this.selClass).map(function (k) { return k; })
+      .concat(Object.keys(this.selCats).map(function (k) { return CATS.filter(function (c) { return c.key === k; })[0].name.toLowerCase(); })
       .concat(Object.keys(this.selTypes).map(function (k) { return k.split("||")[1]; })
-      .concat(Object.keys(this.selStrains).map(function (k) { return self.selStrains[k]; })));
+      .concat(Object.keys(this.selStrains).map(function (k) { return self.selStrains[k]; }))));
     var what = picks.length ? picks.slice(0, 2).join(" + ") + (picks.length > 2 ? " + " + (picks.length - 2) + " more" : "")
       : (this.brandSel.value || "our products");
     this.status.innerHTML = "";
@@ -771,7 +811,7 @@
   Locator.prototype.renderFeature = function () {
     var d = this.data, b = this.brandSel.value;
     var tk = Object.keys(this.selTypes), sk = Object.keys(this.selStrains);
-    if (tk.length > 1 || sk.length > 1 || count(this.selCats)) { this.feat.hidden = true; return; }   // tiles already show the picks
+    if (tk.length > 1 || sk.length > 1 || count(this.selCats) || count(this.selClass)) { this.feat.hidden = true; return; }   // tiles already show the picks
     var t = tk[0] || "", v = sk[0] || "";
     var ok = this.wanted(), ps = ok ? d.products.filter(function (p) { return ok[p.id]; }) : [];
     var img = "", title = "", sub = "", imgs = null;

@@ -43,6 +43,7 @@ Links can also preselect filters, which is handy for Instagram bios and posts:
 | `product_groups` | Combine several LeafLink products into one entry in the Product filter (e.g. Variety Pack #1, #2 and #3). |
 | `brand_logos` | Logo shown when someone picks a brand. Images live in `docs/img/brands/`. |
 | `strain_images` | Strain artwork per brand, shown when a strain is picked without a product. Images live in `docs/img/strains/`. |
+| `default_strain_class` | Strain type (indica / sativa / hybrid) used when a strain has no tag in LeafLink. Set to `hybrid`. |
 | `rename_products` | Show a product under a different name on the website, e.g. Wisenheimer Tugboat → Wisenheimer Live Rosin All In One (1g). |
 | `remove_words` | Words dropped from every product name on the site (e.g. "Distillate"). |
 | `type_images` | Generic photo per product (used when a product is picked without a strain). Put the image in `docs/img/products/` and add a line here. |
