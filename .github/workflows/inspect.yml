@@ -1,0 +1,27 @@
+name: Inspect LeafLink companies (temporary)
+on: workflow_dispatch
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          KEY: ${{ secrets.LEAFLINK_API_KEY }}
+        run: |
+          python3 - <<'PY'
+          import json, os, urllib.request, collections
+          def get(u):
+              return json.load(urllib.request.urlopen(urllib.request.Request("https://app.leaflink.com/api/v2/" + u, headers={"Authorization": "App " + os.environ["KEY"]})))
+          for path in ("companies/?limit=50", "brands/?limit=100"):
+              try:
+                  r = get(path)
+                  rows = r.get("results", r) if isinstance(r, dict) else r
+                  print("==", path, "count:", r.get("count") if isinstance(r, dict) else len(rows))
+                  for c in rows:
+                      print("  ", {k: c.get(k) for k in ("id", "name", "slug", "state", "company", "license_number", "type") if k in c})
+              except Exception as e:
+                  print("==", path, "ERR", e)
+          # where do orders ship? (state of customers on recent orders)
+          r = get("orders-received/?limit=200&include_children=customer&fields=customer,seller,status,created_on")
+          print("orders sample states:", collections.Counter(((o.get("customer") or {}).get("state") if isinstance(o.get("customer"), dict) else "?") for o in r["results"]))
+          print("seller ids:", collections.Counter(str(o.get("seller")) for o in r["results"]))
+          PY
