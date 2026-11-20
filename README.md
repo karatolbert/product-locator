@@ -97,5 +97,4 @@ Panacea and Wisenheimer strains change every batch, so the strain picker draws a
 the brand mark (`docs/img/brands/panacea-icon.png`, `docs/img/brands/wisenheimer-hat.png`) plus the strain name, shrunk to fit.
 Settings live in `GEN_ART` in `docs/locator.js`. Fonts come from the Adobe Fonts kit `zri2gpm`
 (FF DIN Paneuropean Regular for Wisenheimer; Garamond Premier Pro Bold, narrowed with CSS, standing in for ITC Garamond Condensed,
-which isn't on Adobe Fonts). The kit only serves fonts on the domains listed for it at fonts.adobe.com;
-other sites show fallback fonts until their domain is added there.
+which isn't on Adobe Fonts). Adobe Fonts web projects work on any website, so no domain setup is needed.
