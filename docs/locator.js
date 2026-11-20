@@ -450,7 +450,7 @@
     this.rail.classList.toggle("pl-has-sel", !!cur);
     var all = el("button", { type: "button", class: "pl-logo" + (cur ? "" : " pl-sel"), "aria-pressed": String(!cur),
       onclick: function () { self.brandSel.value = ""; self.refresh(); self.render(true); } },
-      [el("div", { class: "pl-lc pl-all", text: "All" }), el("span", { text: "All brands" })]);
+      [el("div", { class: "pl-lc pl-all", text: "All" }), el("span", { text: this.data.brands.length === 2 ? "Both" : "All brands" })]);
     this.rail.appendChild(all);
     this.data.brands.forEach(function (b) {
       var src = imgs[b] || "";
