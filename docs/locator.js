@@ -504,6 +504,12 @@
     });
     if (u.radius && this.radiusSel.querySelector('option[value="' + u.radius + '"]')) this.radiusSel.value = u.radius;
     if (u.sort === "recent") this.sortSel.value = "recent";
+    // a single-brand site with only one product: open on its strains instead
+    if (this.locked && this.tab === "product" && !u.tab) {
+      var ty = {}, lk = this.locked;
+      d.products.forEach(function (p) { if (p.brand === lk) ty[p.type] = 1; });
+      if (Object.keys(ty).length === 1 && d.products.some(function (p) { return p.brand === lk && isStrain(p); })) this.tab = "strain";
+    }
     if (u.tab === "strain" || u.tab === "product") this.tab = u.tab;
     this.refresh();
   };
