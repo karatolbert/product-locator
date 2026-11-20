@@ -140,7 +140,7 @@
     ".pl-wis{background:radial-gradient(circle at 50% 32%,#6a4060,#533149 72%)!important}",
     ".pl-wis:before{content:\"\";position:absolute;inset:4px;border:1px solid rgba(226,180,110,.6);border-radius:7px;pointer-events:none}",
     ".pl-wis img{height:25%;margin-bottom:6%}",
-    ".pl-wis .pl-gn{max-width:100%;font-family:\"ff-din-paneuropean\",\"DIN Next LT Pro\",\"DIN Alternate\",\"D-DIN\",\"DIN\",\"Arial Narrow\",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#e2b46e;background:linear-gradient(180deg,#f7deb2,#c8913f 55%,#f2cf8f);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}",
+    ".pl-wis .pl-gn{max-width:100%;font-family:\"ff-din-paneuropean\",\"DIN Next LT Pro\",\"DIN Alternate\",\"D-DIN\",\"DIN\",\"Arial Narrow\",sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.07em;color:#e2b46e;background:linear-gradient(180deg,#f7deb2,#c8913f 55%,#f2cf8f);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}",
     ".pl-pan{background:#204653!important}",
     ".pl-pan img{height:38%;margin-bottom:7%}",
     ".pl-pan .pl-gn{width:118%;max-width:none;transform:scaleX(.85);font-family:\"garamond-premier-pro\",\"Garamond Premier Pro\",\"EB Garamond\",Garamond,Georgia,serif;font-weight:700;letter-spacing:-.05em;color:#fff}",
@@ -779,7 +779,7 @@
     "Panacea": { cls: "pl-pan", img: "img/brands/panacea-icon.png" },
     "Wisenheimer": { cls: "pl-wis", img: "img/brands/wisenheimer-hat.png" }
   };
-  var FONT_KIT = "https://use.typekit.net/lnx7cfc.css";   // Adobe Fonts kit (DIN + Garamond)
+  var FONT_KIT = "https://use.typekit.net/zri2gpm.css";   // Adobe Fonts kit (DIN + Garamond)
   function genArt(brand, name) {
     var g = GEN_ART[brand];
     if (!g) return null;
