@@ -89,3 +89,13 @@ The LeafLink key is stored only as the GitHub secret `LEAFLINK_API_KEY` (Setting
 - Locations come from the LeafLink customer record (delivery address preferred). Missing coordinates are looked up once with the free US Census geocoder and cached in `data/geocache.json`.
 - ZIP search on the website uses zippopotam.us; city search uses OpenStreetMap. Neither needs an account.
 - Map tiles: OpenStreetMap (free, no key). Fine for normal site traffic; if traffic grows a lot, switch to a keyed tile provider such as MapTiler.
+
+
+## Generated strain tiles (Panacea, Wisenheimer)
+
+Panacea and Wisenheimer strains change every batch, so the strain picker draws an on-brand tile instead of artwork:
+the brand mark (`docs/img/brands/panacea-icon.png`, `docs/img/brands/wisenheimer-hat.png`) plus the strain name, shrunk to fit.
+Settings live in `GEN_ART` in `docs/locator.js`. Fonts come from the Adobe Fonts kit `lnx7cfc`
+(FF DIN Paneuropean Bold for Wisenheimer; Garamond Premier Pro Bold, narrowed with CSS, standing in for ITC Garamond Condensed,
+which isn't on Adobe Fonts). The kit only serves fonts on the domains listed for it at fonts.adobe.com;
+other sites show fallback fonts until their domain is added there.

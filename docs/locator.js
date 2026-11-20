@@ -134,6 +134,16 @@
     ".pl-tile .pl-ti{width:84px;height:84px;object-fit:contain;border-radius:10px;background:var(--pl-soft)}",
     ".pl-tile .pl-tn{font-size:12.5px;font-weight:600;line-height:1.25;color:#1a1a1a;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}",
     ".pl-tile .pl-tb{font-size:11px;color:var(--pl-muted);margin-top:-3px}",
+    ".pl-gen{position:relative;overflow:hidden;display:flex!important;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-sizing:border-box;padding:0 7px}",
+    ".pl-gen img{display:block;flex:none;width:auto;object-fit:contain}",
+    ".pl-gen .pl-gn{display:block;flex:none;line-height:1.02;overflow-wrap:normal;word-break:normal;hyphens:none}",
+    ".pl-wis{background:radial-gradient(circle at 50% 32%,#6a4060,#533149 72%)!important}",
+    ".pl-wis:before{content:\"\";position:absolute;inset:4px;border:1px solid rgba(226,180,110,.6);border-radius:7px;pointer-events:none}",
+    ".pl-wis img{height:25%;margin-bottom:6%}",
+    ".pl-wis .pl-gn{max-width:100%;font-family:\"ff-din-paneuropean\",\"DIN Next LT Pro\",\"DIN Alternate\",\"D-DIN\",\"DIN\",\"Arial Narrow\",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#e2b46e;background:linear-gradient(180deg,#f7deb2,#c8913f 55%,#f2cf8f);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}",
+    ".pl-pan{background:#204653!important}",
+    ".pl-pan img{height:38%;margin-bottom:7%}",
+    ".pl-pan .pl-gn{width:118%;max-width:none;transform:scaleX(.85);font-family:\"garamond-premier-pro\",\"Garamond Premier Pro\",\"EB Garamond\",Garamond,Georgia,serif;font-weight:700;letter-spacing:-.05em;color:#fff}",
     ".pl-check{position:absolute;top:7px;right:7px;width:20px;height:20px;border-radius:6px;border:1.5px solid #c9c9c9;background:#fff;display:flex;align-items:center;justify-content:center}",
     ".pl-tile.pl-sel .pl-check{background:var(--pl-accent);border-color:var(--pl-accent)}",
     ".pl-check svg{width:13px;height:13px;opacity:0}.pl-tile.pl-sel .pl-check svg{opacity:1}",
@@ -703,6 +713,7 @@
         cls ? el("span", { class: "pl-ctag", text: cls.charAt(0).toUpperCase(), title: cls.charAt(0).toUpperCase() + cls.slice(1),
           "aria-label": cls, style: "background:" + ((CLASSES.filter(function (c) { return c.key === cls; })[0] || {}).color || "#888") }) : null,
         icon ? el("span", { class: "pl-ti pl-ticon", html: icon })
+          : img && img.nodeType ? img
           : img ? el("img", { class: "pl-ti", src: resolve(img), alt: "", loading: "lazy" }) : el("span", { class: "pl-ti" }),
         el("span", { class: "pl-tn", text: name }),
         minis && minis.length ? el("span", { class: "pl-mini", html:
@@ -749,6 +760,7 @@
         o.items.forEach(function (p) { var k = catsOf(p.type).filter(function (x) { return x !== "pack"; })[0] || catsOf(p.type)[0];
           if (k && !kinds[k]) { kinds[k] = 1; minis.push([k, CATS.filter(function (c) { return c.key === k; })[0].name]); } });
         var cls = (o.items.filter(function (p) { return p["class"]; })[0] || {})["class"];
+        if (!art) art = genArt(b || bl[0], o.name) || "";
         tile(self.selStrains[o.key], art || logo, o.name, b ? "" : bl.join(", "), function () {
           if (self.selStrains[o.key]) delete self.selStrains[o.key]; else self.selStrains[o.key] = o.name;
           self.track("locator_filter", { filter: "strain", value: o.name, action: self.selStrains[o.key] ? "add" : "remove" });
@@ -756,8 +768,48 @@
         }, "", minis, cls);
       });
       if (!sopts.length) grid.appendChild(el("div", { class: "pl-gempty", text: "No strains match." }));
+      fitGen(grid);
     }
   };
+
+  // ------------------------------------------------------------ generated strain art
+  // Panacea and Wisenheimer strains change every batch, so instead of artwork
+  // we draw an on-brand tile: brand mark + strain name in the brand typeface.
+  var GEN_ART = {
+    "Panacea": { cls: "pl-pan", img: "img/brands/panacea-icon.png" },
+    "Wisenheimer": { cls: "pl-wis", img: "img/brands/wisenheimer-hat.png" }
+  };
+  var FONT_KIT = "https://use.typekit.net/lnx7cfc.css";   // Adobe Fonts kit (DIN + Garamond)
+  function genArt(brand, name) {
+    var g = GEN_ART[brand];
+    if (!g) return null;
+    return el("span", { class: "pl-ti pl-gen " + g.cls, "aria-hidden": "true" }, [
+      el("img", { src: resolve(g.img), alt: "" }),
+      el("span", { class: "pl-gn", text: name })
+    ]);
+  }
+  // shrink each generated name until it fits its tile (no mid-word breaks)
+  function fitGen(root) {
+    var boxes = root.querySelectorAll(".pl-gen");
+    Array.prototype.forEach.call(boxes, function (box) {
+      var gn = box.querySelector(".pl-gn"), im = box.querySelector("img");
+      var H = box.clientHeight;
+      if (!gn || !H) return;
+      var avail = H - (im ? im.offsetHeight + parseFloat(getComputedStyle(im).marginBottom || 0) : 0) - H * 0.12;
+      var size = Math.round(H * (box.classList.contains("pl-pan") ? 0.2 : 0.16));
+      gn.style.fontSize = size + "px";
+      while (size > 7 && (gn.scrollWidth > gn.clientWidth + 1 || gn.offsetHeight > avail)) {
+        size -= 0.5; gn.style.fontSize = size + "px";
+      }
+    });
+  }
+  var fitTimer;
+  function refitAll() {
+    clearTimeout(fitTimer);
+    fitTimer = setTimeout(function () {
+      Array.prototype.forEach.call(document.querySelectorAll(".pl-grid"), fitGen);
+    }, 60);
+  }
 
   Locator.prototype.matches = function (store, ok) {
     return !ok || store.products.some(function (x) { return ok[x]; });
@@ -1110,6 +1162,12 @@
     style.textContent = CSS;
     document.head.appendChild(style);
     loadCSS(LEAFLET_CSS);
+    loadCSS(FONT_KIT);
+    if (document.fonts) {
+      if (document.fonts.ready) document.fonts.ready.then(refitAll);
+      if (document.fonts.addEventListener) document.fonts.addEventListener("loadingdone", refitAll);
+    }
+    window.addEventListener("resize", refitAll);
     var roots = document.querySelectorAll("#product-locator, [data-product-locator]");
     Array.prototype.forEach.call(roots, function (r) { if (!r.__pl) r.__pl = new Locator(r); });
   }
