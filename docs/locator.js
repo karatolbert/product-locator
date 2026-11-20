@@ -134,6 +134,8 @@
     ".pl-tile .pl-ti{width:84px;height:84px;object-fit:contain;border-radius:10px;background:var(--pl-soft)}",
     ".pl-tile .pl-tn{font-size:12.5px;font-weight:600;line-height:1.25;color:#1a1a1a;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}",
     ".pl-tile .pl-tb{font-size:11px;color:var(--pl-muted);margin-top:-3px}",
+    ".pl-duo{display:flex!important;align-items:center;justify-content:center;gap:0;overflow:hidden}",
+    ".pl-duo{background:#fff!important}.pl-duo img{flex:1 1 0;min-width:0;height:100%;object-fit:cover}",
     ".pl-gen{position:relative;overflow:hidden;display:flex!important;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-sizing:border-box;padding:0 7px}",
     ".pl-gen img{display:block;flex:none;width:auto;object-fit:contain}",
     ".pl-gen .pl-gn{display:block;flex:none;line-height:1.02;overflow-wrap:normal;word-break:normal;hyphens:none}",
@@ -782,8 +784,14 @@
         if (!art) art = genArt(b || bl[0], o.name) || "";
         var sub = b ? "" : bl.join(", ");
         if (colorBrand) {  // colors: show the product photo and which products come in it
-          var ph = o.items.filter(function (p) { return p.image; })[0];
-          if (ph) art = ph.image;
+          var seenP = {}, phs = o.items.filter(function (p) { return p.image && !seenP[p.image] && (seenP[p.image] = 1); });
+          if (phs.length > 1) {  // same color in several models: show each photo side by side
+            art = el("span", { class: "pl-ti pl-duo" }, phs.slice(0, 3).map(function (p) {
+              var im = el("img", { src: resolve(p.image), alt: p.type, loading: "lazy" });
+              im.onerror = function () { im.remove(); };
+              return im;
+            }));
+          } else if (phs.length) art = phs[0].image;
           var tn = {}; o.items.forEach(function (p) { tn[p.type.replace(p.brand, "").replace(/battery/i, "").trim()] = 1; });
           sub = Object.keys(tn).join(" \u00b7 "); minis = []; cls = "";
         }
