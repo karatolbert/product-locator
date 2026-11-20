@@ -977,9 +977,12 @@
     if (fit) {
       var pts = rows.slice(0, o ? 15 : rows.length).map(function (r) { return [r.s.lat, r.s.lng]; });
       if (o) pts.push([o.lat, o.lng]);
-      if (pts.length === 1) this.map.setView(pts[0], 12);
-      else if (pts.length) this.map.fitBounds(pts, { padding: [30, 30], maxZoom: 13 });
-      else if (o) this.map.setView([o.lat, o.lng], 10);
+      // no animation: a zoom that is still animating would swallow this one
+      // (e.g. the "all stores" view on load, then the visitor's location arrives)
+      this.map.stop();
+      if (pts.length === 1) this.map.setView(pts[0], 12, { animate: false });
+      else if (pts.length) this.map.fitBounds(pts, { padding: [30, 30], maxZoom: 13, animate: false });
+      else if (o) this.map.setView([o.lat, o.lng], 10, { animate: false });
     }
     setTimeout(function () { self.map.invalidateSize(); }, 50);
   };
