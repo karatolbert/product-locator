@@ -479,6 +479,7 @@
     var want = d.brands.filter(function (b) { return norm(b) === norm(self.initBrand); })[0];
     if (want) s.value = want;
     if (this.locked) { s.value = this.locked; want = this.locked; }
+    setColorBrand(s.value);
     var q = norm(this.initProduct);
     if (q) {
       var p = d.products.filter(function (p) { return p.id === q || norm(p.name) === q; })[0];
@@ -514,7 +515,17 @@
     this.refresh();
   };
 
+  // Brands whose variants are colors rather than strains (e.g. Boost! batteries).
+  // While one of them is the selected brand, the Strain tab becomes a Color tab.
+  var COLOR_BRANDS = { "Boost!": 1 }, colorBrand = "";
+  function setColorBrand(b) { colorBrand = COLOR_BRANDS[b] ? b : ""; }
+  function vWord(n, cap) {
+    var w = colorBrand ? "color" : "strain";
+    if (n !== 1) w += "s";
+    return cap ? w.charAt(0).toUpperCase() + w.slice(1) : w;
+  }
   function isStrain(p) {
+    if (COLOR_BRANDS[p.brand]) return !!p.variant && colorBrand === p.brand;
     return p.variant && !/battery|variety|sampler/i.test(p.type + " " + p.variant);
   }
   function count(o) { return Object.keys(o).length; }
@@ -564,6 +575,7 @@
   // Drop picks that no longer fit (e.g. after changing brand)
   // Picks only drop when the brand changes and they don't belong to it
   Locator.prototype.refresh = function () {
+    setColorBrand(this.brandSel.value);
     var self = this, b = this.brandSel.value;
     if (!b) return;
     var cats = {};
@@ -699,13 +711,14 @@
 
   Locator.prototype.renderPicker = function () {
     var self = this, d = this.data, b = this.brandSel.value, f = this.pickFilter;
+    setColorBrand(b);
     var nc = count(this.selCats), nt = count(this.selTypes), ns = count(this.selStrains), me = this;
-    [[this.tabP, "Product", nt, "product"], [this.tabS, "Strain", ns, "strain"]].forEach(function (x) {
+    [[this.tabP, "Product", nt, "product"], [this.tabS, vWord(1, true), ns, "strain"]].forEach(function (x) {
       x[0].innerHTML = ""; x[0].appendChild(document.createTextNode(x[1]));
       if (x[2]) x[0].appendChild(el("i", { text: String(x[2]) }));
       x[0].classList.toggle("pl-sel", me.tab === x[3]);
     });
-    this.pf.placeholder = this.tab === "product" ? "Find a product" : "Find a strain";
+    this.pf.placeholder = this.tab === "product" ? "Find a product" : "Find a " + vWord(1);
     this.clearBtn.hidden = !(nc || nt || ns || count(this.selClass));
     this.renderTypes();
     var closed = this.pick.classList.contains("pl-closed");
@@ -746,7 +759,7 @@
         var img = (d.type_images || {})[o.type] || (withImg ? withImg.image : "") || (d.brand_images || {})[o.brand];
         var label = o.type.replace(new RegExp("^" + o.brand.replace(/[.*+?^${}()|[\]\\!]/g, "\\$&") + "\\s+"), "");
         var n = o.items.filter(isStrain).length;
-        tile(self.selTypes[o.key], img, label, (b ? "" : o.brand) + (n ? (b ? "" : " \u00b7 ") + n + (n === 1 ? " strain" : " strains") : ""), function () {
+        tile(self.selTypes[o.key], img, label, (b ? "" : o.brand) + (n ? (b ? "" : " \u00b7 ") + n + " " + vWord(n) : ""), function () {
           if (self.selTypes[o.key]) delete self.selTypes[o.key]; else self.selTypes[o.key] = true;
           self.track("locator_filter", { filter: "product", value: o.type, action: self.selTypes[o.key] ? "add" : "remove" });
           self.refresh(); self.render(true);
@@ -767,13 +780,20 @@
           if (k && !kinds[k]) { kinds[k] = 1; minis.push([k, CATS.filter(function (c) { return c.key === k; })[0].name]); } });
         var cls = (o.items.filter(function (p) { return p["class"]; })[0] || {})["class"];
         if (!art) art = genArt(b || bl[0], o.name) || "";
-        tile(self.selStrains[o.key], art || logo, o.name, b ? "" : bl.join(", "), function () {
+        var sub = b ? "" : bl.join(", ");
+        if (colorBrand) {  // colors: show the product photo and which products come in it
+          var ph = o.items.filter(function (p) { return p.image; })[0];
+          if (ph) art = ph.image;
+          var tn = {}; o.items.forEach(function (p) { tn[p.type.replace(p.brand, "").replace(/battery/i, "").trim()] = 1; });
+          sub = Object.keys(tn).join(" \u00b7 "); minis = []; cls = "";
+        }
+        tile(self.selStrains[o.key], art || logo, o.name, sub, function () {
           if (self.selStrains[o.key]) delete self.selStrains[o.key]; else self.selStrains[o.key] = o.name;
-          self.track("locator_filter", { filter: "strain", value: o.name, action: self.selStrains[o.key] ? "add" : "remove" });
+          self.track("locator_filter", { filter: colorBrand ? "color" : "strain", value: o.name, action: self.selStrains[o.key] ? "add" : "remove" });
           self.refresh(); self.render(true);
         }, "", minis, cls);
       });
-      if (!sopts.length) grid.appendChild(el("div", { class: "pl-gempty", text: "No strains match." }));
+      if (!sopts.length) grid.appendChild(el("div", { class: "pl-gempty", text: "No " + vWord(2) + " match." }));
       fitGen(grid);
     }
   };
@@ -1096,7 +1116,7 @@
     } else if (t && ps.length) {
       title = ps[0].type;
       var n = ps.filter(isStrain).length;
-      sub = n ? n + (n === 1 ? " strain" : " strains") : ps[0].brand;
+      sub = n ? n + " " + vWord(n) : ps[0].brand;
       var generic = (d.type_images || {})[ps[0].type];
       img = generic || (withImg ? withImg.image : "");
     } else if (b) {

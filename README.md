@@ -98,3 +98,9 @@ the brand mark (`docs/img/brands/panacea-icon.png`, `docs/img/brands/wisenheimer
 Settings live in `GEN_ART` in `docs/locator.js`. Fonts come from the Adobe Fonts kit `zri2gpm`
 (FF DIN Paneuropean Regular for Wisenheimer; Garamond Premier Pro Bold, narrowed with CSS, standing in for ITC Garamond Condensed,
 which isn't on Adobe Fonts). Adobe Fonts web projects work on any website, so no domain setup is needed.
+
+## Color brands (Boost!)
+
+Boost! batteries come in colors, not strains. `COLOR_BRANDS` in `docs/locator.js` lists such brands: while one of them
+is the selected brand (its own site, or its bubble on the main map) the Strain tab becomes a Color tab showing each
+color's product photo. With "All brands" selected, colors stay out of the strain list.
