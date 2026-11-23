@@ -1,5 +1,5 @@
 {
-  "lookback_days": 45,
+  "lookback_days": 30,
   "order_statuses": [
     "Accepted",
     "Fulfilled",
